@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MentalCharge" />
+  <title>MentalCharge</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #12121a;
+      --border:    #1e1e2e;
+      --muted:     #3a3a52;
+      --text:      #e8e8f0;
+      --sub:       #7a7a9a;
+      --accent:    #6c8aff;
+      --accent2:   #a78bfa;
+      --ok:        #34d399;
+      --warn:      #fb923c;
+      --r:         16px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── Layout ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 28px 24px 0;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .greeting {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(26px, 7vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--text) 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .date-chip {
+      font-size: 11px;
+      color: var(--sub);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      margin-top: 4px;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--sub);
+      letter-spacing: 0.03em;
+    }
+
+    .badge.ok   { color: var(--ok);   border-color: rgba(52,211,153,0.25); background: rgba(52,211,153,0.06); }
+    .badge.warn { color: var(--warn); border-color: rgba(251,146,60,0.25);  background: rgba(251,146,60,0.06); }
+    .badge.info { color: var(--accent); border-color: rgba(108,138,255,0.25); background: rgba(108,138,255,0.06); }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ── Main content ── */
+    main {
+      flex: 1;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 20px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.10s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.20s; }
+
+    .card-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sub);
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.5;
+    }
+
+    /* Brief card */
+    .brief-card {
+      background: linear-gradient(135deg, #0f1022 0%, #12121a 100%);
+      border-color: rgba(108,138,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brief-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(108,138,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brief-placeholder {
+      font-size: 13px;
+      color: var(--sub);
+      font-style: italic;
+      line-height: 1.6;
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px dashed var(--muted);
+      border-radius: 10px;
+    }
+
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      padding: 11px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .btn-primary:hover { background: #8aa3ff; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--sub);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Rappels */
+    .rappel-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+    .rappel-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--sub);
+    }
+
+    .rappel-item .time {
+      font-size: 11px;
+      color: var(--accent);
+      min-width: 42px;
+    }
+
+    .rappel-item .label { flex: 1; color: var(--text); }
+
+    .rappel-empty {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* Voice button */
+    .voice-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--bg);
+      border: 1.5px dashed var(--muted);
+      border-radius: 12px;
+      color: var(--sub);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .voice-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .voice-btn.recording { border-color: #f43f5e; color: #f43f5e; border-style: solid; animation: pulse 1s infinite; }
+
+    /* Setup banner */
+    .setup-banner {
+      background: rgba(251,146,60,0.07);
+      border: 1px solid rgba(251,146,60,0.2);
+      border-radius: var(--r);
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      animation: fadeUp 0.5s 0.25s ease both;
+    }
+
+    .setup-banner-icon { font-size: 18px; margin-top: 1px; }
+
+    .setup-banner-text { flex: 1; }
+    .setup-banner-text strong { display: block; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--warn); margin-bottom: 2px; }
+    .setup-banner-text span { font-size: 11px; color: var(--sub); line-height: 1.5; }
+
+    /* Footer nav */
+    nav {
+      display: flex;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: color 0.15s;
+      border: none;
+      background: none;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .nav-item.active { color: var(--accent); }
+    .nav-item svg { width: 22px; height: 22px; stroke-width: 1.5; }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.6; }
+    }
+
+    /* Sections cachées */
+    .section { display: none; }
+    .section.active { display: contents; }
+
+    /* Settings */
+    .settings-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .setting-label { font-size: 12px; color: var(--text); }
+    .setting-sub   { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+    .setting-value {
+      font-size: 11px;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    .setting-value.ko { color: var(--warn); }
+
+    /* Input */
+    .input-field {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-top: 8px;
+    }
+
+    .input-field:focus { border-color: var(--accent); }
+    .input-field::placeholder { color: var(--muted); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="greeting" id="greeting">Bonjour, Ben.</div>
+      <div class="date-chip" id="datechip">—</div>
+    </div>
+    <div class="status-row" id="statusRow">
+      <span class="badge warn"><span class="dot"></span>Google non connecté</span>
+      <span class="badge warn"><span class="dot"></span>API non configurée</span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main id="mainContent">
+
+    <!-- Bandeau setup -->
+    <div class="setup-banner" id="setupBanner">
+      <div class="setup-banner-icon">⚙️</div>
+      <div class="setup-banner-text">
+        <strong>Configuration requise</strong>
+        <span>Connecte ton compte Google et entre ta clé API Anthropic dans les paramètres pour activer le brief matinal.</span>
+      </div>
+    </div>
+
+    <!-- Section BRIEF -->
+    <div class="section active" id="sectionBrief">
+
+      <div class="card brief-card">
+        <div class="card-label">Brief matinal</div>
+        <div class="card-title" id="briefTitle">Pas encore configuré</div>
+        <div class="brief-placeholder" id="briefContent">
+          Une fois Google et l'API connectés, ton brief s'affichera ici : agenda du jour, emails importants, météo, rappels à venir.
+        </div>
+        <button class="btn btn-primary" id="btnBrief" onclick="genererBrief()">
+          ✦ Générer le brief
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Rappels du jour</div>
+        <div class="rappel-list" id="rappelList">
+          <div class="rappel-empty">Aucun rappel configuré.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Dictée vocale</div>
+        <div class="card-sub">Parle, Claude interprète et crée un rappel.</div>
+        <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">
+          🎙 Appuyer pour dicter
+        </button>
+      </div>
+
+    </div><!-- /sectionBrief -->
+
+    <!-- Section AGENDA -->
+    <div class="section" id="sectionAgenda">
+      <div class="card">
+        <div class="card-label">Agenda</div>
+        <div class="card-title">Aujourd'hui</div>
+        <div class="card-sub" id="agendaContent">Connecte Google Calendar pour voir tes événements.</div>
+      </div>
+    </div>
+
+    <!-- Section PARAMS -->
+    <div class="section" id="sectionParams">
+      <div class="card">
+        <div class="card-label">API Anthropic</div>
+        <input class="input-field" type="password" id="inputApiKey" placeholder="sk-ant-..." />
+        <button class="btn btn-primary" onclick="sauvegarderCle()" style="margin-top:10px;">Sauvegarder</button>
+      </div>
+      <div class="card" style="animation-delay:0.1s">
+        <div class="card-label">Statut</div>
+        <div class="settings-list">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Clé Anthropic</div>
+              <div class="setting-sub">claude-haiku-4-5</div>
+            </div>
+            <div class="setting-value ko" id="statusApiKey">Non configurée</div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Google OAuth</div>
+              <div class="setting-sub">Gmail + Calendar</div>
+            </div>
+            <div class="setting-value ko" id="statusGoogle">Non connecté</div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Notifications</div>
+              <div class="setting-sub">Rappels push</div>
+            </div>
+            <div class="setting-value ko" id="statusNotif">Non autorisé</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="animation-delay:0.2s">
+        <div class="card-label">Autorisations</div>
+        <button class="btn btn-ghost" onclick="demanderNotifications()" style="width:100%;margin-top:4px;">
+          🔔 Autoriser les notifications
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- NAV -->
+  <nav>
+    <button class="nav-item active" id="nav-brief" onclick="switchTab('brief')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Brief
+    </button>
+    <button class="nav-item" id="nav-agenda" onclick="switchTab('agenda')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Agenda
+    </button>
+    <button class="nav-item" id="nav-params" onclick="switchTab('params')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Paramètres
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<script>
+// ── Enregistrement Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(console.error);
+}
+
+// ── Date & Heure ──
+function updateDateTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const greeting = h < 6 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bonjour' : 'Bonsoir';
+  document.getElementById('greeting').textContent = `${greeting}, Ben.`;
+
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  document.getElementById('datechip').textContent = now.toLocaleDateString('fr-FR', opts);
+}
+updateDateTime();
+setInterval(updateDateTime, 60000);
+
+// ── Stockage local ──
+function getCle() { return localStorage.getItem('anthropic_key') || ''; }
+function saveCle(k) { localStorage.setItem('anthropic_key', k); }
+
+function sauvegarderCle() {
+  const val = document.getElementById('inputApiKey').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    alert('La clé doit commencer par sk-ant-');
+    return;
+  }
+  saveCle(val);
+  updateStatuts();
+  alert('Clé sauvegardée ✓');
+}
+
+function updateStatuts() {
+  const cle = getCle();
+  const elCle = document.getElementById('statusApiKey');
+  const elBanner = document.getElementById('setupBanner');
+  const elStatusRow = document.getElementById('statusRow');
+
+  if (cle) {
+    elCle.textContent = 'Configurée ✓';
+    elCle.className = 'setting-value ok';
+  } else {
+    elCle.textContent = 'Non configurée';
+    elCle.className = 'setting-value ko';
+  }
+
+  // Notifs
+  const np = Notification.permission;
+  const elNotif = document.getElementById('statusNotif');
+  if (np === 'granted') {
+    elNotif.textContent = 'Autorisé ✓';
+    elNotif.className = 'setting-value ok';
+  } else {
+    elNotif.textContent = np === 'denied' ? 'Refusé' : 'Non autorisé';
+    elNotif.className = 'setting-value ko';
+  }
+
+  // Bandeau setup
+  if (cle) {
+    elBanner.style.display = 'none';
+    elStatusRow.innerHTML = '<span class="badge ok"><span class="dot"></span>API prête</span><span class="badge warn"><span class="dot"></span>Google à connecter</span>';
+  }
+}
+updateStatuts();
+
+// ── Navigation ──
+function switchTab(tab) {
+  ['brief','agenda','params'].forEach(t => {
+    document.getElementById(`section${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active', t === tab);
+    document.getElementById(`nav-${t}`).classList.toggle('active', t === tab);
+  });
+}
+
+// ── Notifications ──
+function demanderNotifications() {
+  Notification.requestPermission().then(p => {
+    updateStatuts();
+    if (p === 'granted') alert('Notifications autorisées ✓');
+  });
+}
+
+// ── Brief (stub — branché sur Claude dans la prochaine étape) ──
+async function genererBrief() {
+  const cle = getCle();
+  if (!cle) {
+    alert('Configure d\'abord ta clé API dans les Paramètres.');
+    switchTab('params');
+    return;
+  }
+
+  const btn = document.getElementById('btnBrief');
+  const content = document.getElementById('briefContent');
+  btn.textContent = '⏳ Génération en cours…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cle,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-allowance': 'my-public-webui'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system: 'Tu es l\'assistant personnel de Ben, anesthésiste-réanimateur en chirurgie cardiaque à Paris. Tu génères un brief matinal bref, utile et structuré. Sois concis, direct, sans fioritures. Date du jour en introduction, puis 2-3 points clés fictifs pour illustrer le format (agenda, météo, rappels). Indique clairement que c\'est un exemple en attendant la connexion Google.',
+        messages: [{ role: 'user', content: 'Génère mon brief matinal d\'exemple.' }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.content?.[0]?.text) {
+      content.style.fontStyle = 'normal';
+      content.style.color = 'var(--text)';
+      content.innerHTML = data.content[0].text.replace(/\n/g, '<br>');
+      document.getElementById('briefTitle').textContent = 'Brief du ' + new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    } else {
+      throw new Error(data.error?.message || 'Réponse inattendue');
+    }
+  } catch(err) {
+    content.textContent = 'Erreur : ' + err.message;
+  } finally {
+    btn.textContent = '↺ Actualiser';
+    btn.disabled = false;
+  }
+}
+
+// ── Dictée vocale (stub) ──
+let recording = false;
+function toggleVoice() {
+  const btn = document.getElementById('voiceBtn');
+  if (!recording) {
+    btn.textContent = '⏹ Enregistrement… (appuyer pour arrêter)';
+    btn.classList.add('recording');
+    recording = true;
+    // TODO: Web Speech API + envoi à Claude
+  } else {
+    btn.textContent = '🎙 Appuyer pour dicter';
+    btn.classList.remove('recording');
+    recording = false;
+  }
+}
+</script>
+</body>
+</html>
