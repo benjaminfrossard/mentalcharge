@@ -1,8 +1,10 @@
-const CACHE_NAME = 'assistant-perso-v1';
+const CACHE_NAME = 'mentalcharge-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
-  './sw.js'
+  './sw.js',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -27,7 +29,6 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Notifications futures
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(clients.openWindow('./index.html'));
