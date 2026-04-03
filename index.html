@@ -439,6 +439,98 @@
 
     .history-empty { font-size: 13px; color: var(--text-dim); font-style: italic; padding: 4px 0; }
 
+    /* ── TODOLIST ── */
+    .todo-list { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      transition: opacity 0.2s;
+    }
+
+    .todo-item.done { opacity: 0.4; }
+
+    .todo-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--border2);
+      border-radius: 5px;
+      background: var(--surface);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      font-size: 11px;
+      color: transparent;
+    }
+
+    .todo-item.done .todo-checkbox {
+      background: var(--ok);
+      border-color: var(--ok);
+      color: #fff;
+    }
+
+    .todo-label {
+      flex: 1;
+      color: var(--text);
+      transition: text-decoration 0.15s;
+    }
+
+    .todo-item.done .todo-label {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .todo-time { font-size: 11px; color: var(--accent); min-width: 40px; font-weight: 500; }
+
+    .todo-del-btn {
+      background: none; border: none; color: var(--text-dim);
+      cursor: pointer; font-size: 15px; padding: 0 2px;
+      transition: color 0.15s;
+    }
+    .todo-del-btn:hover { color: var(--danger); }
+
+    .todo-empty { font-size: 13px; color: var(--text-dim); font-style: italic; padding: 4px 0; }
+
+    /* File d'attente badge */
+    .queue-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(179,157,219,0.3);
+      background: rgba(179,157,219,0.08);
+      color: var(--accent2);
+      cursor: pointer;
+    }
+
+    /* Brief du soir — card teinte différente */
+    .brief-card-soir {
+      background: linear-gradient(145deg, #1e1830 0%, var(--surface) 100%);
+      border-color: rgba(179,157,219,0.2);
+    }
+
+    /* Sync info */
+    .sync-info {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     /* Export/import */
     .export-zone {
       background: var(--bg);
@@ -569,28 +661,39 @@
     <!-- ── SECTION BRIEF ── -->
     <div class="section active" id="sectionBrief">
 
-      <div class="card brief-card">
-        <div class="card-label">Brief matinal</div>
+      <div class="card brief-card" id="briefCard">
+        <div class="card-label" id="briefLabel">Brief matinal</div>
         <div class="card-title" id="briefTitle">Pas encore configuré</div>
         <div id="briefPlaceholder" class="brief-placeholder">
           Une fois l'API configurée, ton brief s'affichera ici : agenda du jour, emails importants, météo, rappels à venir.
         </div>
         <div id="briefContent" class="brief-content" style="display:none;"></div>
         <div id="briefMeta" class="brief-meta" style="display:none;"></div>
-        <button class="btn btn-primary" id="btnBrief" onclick="genererBrief()">
-          ✦ Générer le brief
-        </button>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" id="btnBrief" onclick="genererBrief()" style="flex:1; margin-top:0;">
+            ✦ Générer le brief
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btnSyncQueue" onclick="syncerFile()" title="Synchroniser la file d'attente" style="display:none;">↺ Sync</button>
+        </div>
+        <div class="sync-info" id="syncInfo" style="display:none;">
+          <span id="queueCount"></span>
+          <span id="lastSyncInfo"></span>
+        </div>
       </div>
 
+      <!-- Todolist -->
       <div class="card">
-        <div class="card-label">Rappels du jour</div>
-        <div class="rappel-list" id="rappelList">
-          <div class="rappel-empty">Aucun rappel configuré.</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div class="card-label" style="margin-bottom:0;">À faire</div>
+          <button class="btn btn-ghost btn-sm" onclick="archiverTodosFaits()" style="font-size:11px; padding:5px 10px; color:var(--text-dim);">Archiver faits</button>
+        </div>
+        <div class="todo-list" id="todoList">
+          <div class="todo-empty">Aucune tâche pour le moment.</div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-label">Nouveau rappel</div>
+        <div class="card-label">Nouveau rappel / tâche</div>
         <div class="input-mode-tabs">
           <button class="mode-tab active" id="tabVoice" onclick="switchInputMode('voice')">🎙 Dictée</button>
           <button class="mode-tab" id="tabText" onclick="switchInputMode('text')">⌨️ Écrire</button>
@@ -602,15 +705,22 @@
             🎙 Appuyer pour dicter
           </button>
           <div id="voiceTranscript" style="display:none; margin-top:10px; font-size:13px; color:var(--text-muted); font-style:italic; padding: 8px 12px; background:var(--bg); border-radius:var(--r-sm); border:1px solid var(--border);"></div>
-          <button id="btnValidateVoice" class="btn btn-primary" style="display:none;" onclick="validerRappel('voice')">✓ Créer ce rappel</button>
+          <button id="btnValidateVoice" class="btn btn-primary" style="display:none;" onclick="validerRappel('voice')">✓ Ajouter</button>
         </div>
 
         <!-- Mode texte -->
         <div id="modeText" style="display:none;">
-          <textarea class="text-input-area" id="textRappel" placeholder="Ex: Appeler cardiologue demain à 9h, prendre médicaments ce soir…"></textarea>
+          <textarea class="text-input-area" id="textRappel" placeholder="Ex: Appeler cardiologue demain à 9h, faire les courses ce soir…"></textarea>
           <div class="btn-row">
             <button class="btn btn-ghost btn-sm" onclick="clearTextRappel()">Effacer</button>
-            <button class="btn btn-primary btn-sm" style="flex:1; margin-top:0;" onclick="validerRappel('text')">✓ Créer ce rappel</button>
+            <button class="btn btn-primary btn-sm" style="flex:1; margin-top:0;" onclick="validerRappel('text')">✓ Ajouter</button>
+          </div>
+        </div>
+
+        <!-- File d'attente info -->
+        <div id="queueInfo" style="display:none; margin-top:10px;">
+          <div class="sync-info">
+            💾 <span id="queuePendingInfo"></span> — seront interprétés à la prochaine sync.
           </div>
         </div>
       </div>
@@ -767,10 +877,11 @@ const S = {
   del: (k) => { try { localStorage.removeItem(k); } catch {} }
 };
 
-function getCle()      { return S.get('mc_api_key', ''); }
-function getContexte() { return S.get('mc_contexte', ''); }
-function getRappels()  { return S.get('mc_rappels', []); }
-function getHistoire() { return S.get('mc_historique', []); }
+function getCle()       { return S.get('mc_api_key', ''); }
+function getContexte()  { return S.get('mc_contexte', ''); }
+function getTodos()     { return S.get('mc_todos', []); }
+function getHistoire()  { return S.get('mc_historique', []); }
+function getQueue()     { return S.get('mc_queue', []); }
 
 // ── Navigation ──
 const TABS = ['brief','agenda','historique','params'];
@@ -818,6 +929,7 @@ function updateStatuts() {
     elBanner.style.display = 'flex';
     elStatusRow.innerHTML = '<span class="badge warn"><span class="dot"></span>Google non connecté</span><span class="badge warn"><span class="dot"></span>API non configurée</span>';
   }
+  updateQueueUI();
 }
 updateStatuts();
 
@@ -857,35 +969,223 @@ function clearTextRappel() {
   document.getElementById('textRappel').value = '';
 }
 
-// ── Rappels ──
-function renderRappels() {
-  const list = document.getElementById('rappelList');
-  const rappels = getRappels();
-  if (!rappels.length) {
-    list.innerHTML = '<div class="rappel-empty">Aucun rappel configuré.</div>';
+// ────────────────────────────────────────────────
+// ── TODOLIST ──
+// ────────────────────────────────────────────────
+
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  const todos = getTodos();
+  const actifs = todos.filter(t => !t.done);
+  const faits = todos.filter(t => t.done);
+  const all = [...actifs, ...faits];
+
+  if (!all.length) {
+    list.innerHTML = '<div class="todo-empty">Aucune tâche pour le moment.</div>';
     return;
   }
-  list.innerHTML = rappels.map((r, i) => `
-    <div class="rappel-item">
-      <span class="time">${r.time || '—'}</span>
-      <span class="label">${escHtml(r.text)}</span>
-      <button class="del-btn" onclick="supprimerRappel(${i})" title="Supprimer">✕</button>
-    </div>
-  `).join('');
+
+  list.innerHTML = all.map((t, i) => {
+    const realIdx = todos.indexOf(t);
+    return `
+      <div class="todo-item ${t.done ? 'done' : ''}" id="todo-${realIdx}">
+        <div class="todo-checkbox" onclick="toggleTodo(${realIdx})">${t.done ? '✓' : ''}</div>
+        ${t.time ? `<span class="todo-time">${t.time}</span>` : ''}
+        <span class="todo-label">${escHtml(t.text)}</span>
+        <button class="todo-del-btn" onclick="supprimerTodo(${realIdx})" title="Supprimer">✕</button>
+      </div>
+    `;
+  }).join('');
 }
 
-function supprimerRappel(idx) {
-  const rappels = getRappels();
-  rappels.splice(idx, 1);
-  S.set('mc_rappels', rappels);
-  renderRappels();
-  showToast('Rappel supprimé');
+function toggleTodo(idx) {
+  const todos = getTodos();
+  if (!todos[idx]) return;
+  todos[idx].done = !todos[idx].done;
+  todos[idx].doneAt = todos[idx].done ? new Date().toISOString() : null;
+  S.set('mc_todos', todos);
+  renderTodos();
 }
 
-async function validerRappel(mode) {
+function supprimerTodo(idx) {
+  const todos = getTodos();
+  todos.splice(idx, 1);
+  S.set('mc_todos', todos);
+  renderTodos();
+}
+
+function archiverTodosFaits() {
+  const todos = getTodos();
+  const faits = todos.filter(t => t.done);
+  if (!faits.length) { showToast('Aucune tâche complétée'); return; }
+
+  // Archiver dans historique
+  faits.forEach(t => {
+    ajouterHistorique('todo', `✓ ${t.text}${t.time ? ' (' + t.time + ')' : ''}`);
+  });
+
+  // Retirer de la liste active
+  const restants = todos.filter(t => !t.done);
+  S.set('mc_todos', restants);
+  renderTodos();
+  showToast(`${faits.length} tâche(s) archivée(s) ✓`);
+}
+
+// ────────────────────────────────────────────────
+// ── FILE D'ATTENTE LOCALE ──
+// Rappels saisis stockés sans appel API,
+// interprétés en lot à la sync (2x/jour ou manuelle)
+// ────────────────────────────────────────────────
+
+function updateQueueUI() {
+  const queue = getQueue();
+  const lastSync = S.get('mc_last_sync', null);
+  const nextSync = prochaineSyncHeure();
+
+  const queueCountEl = document.getElementById('queueCount');
+  const lastSyncEl = document.getElementById('lastSyncInfo');
+  const syncInfoEl = document.getElementById('syncInfo');
+  const btnSync = document.getElementById('btnSyncQueue');
+  const queueInfoEl = document.getElementById('queueInfo');
+  const queuePendingEl = document.getElementById('queuePendingInfo');
+
+  if (queue.length > 0) {
+    if (syncInfoEl) {
+      syncInfoEl.style.display = 'flex';
+      if (queueCountEl) queueCountEl.textContent = `${queue.length} en attente`;
+      if (lastSyncEl) lastSyncEl.textContent = `— prochaine sync ${nextSync}`;
+    }
+    if (btnSync) btnSync.style.display = 'block';
+    if (queueInfoEl) {
+      queueInfoEl.style.display = 'block';
+      if (queuePendingEl) queuePendingEl.textContent = `${queue.length} élément(s) en attente`;
+    }
+  } else {
+    if (syncInfoEl) syncInfoEl.style.display = 'none';
+    if (btnSync) btnSync.style.display = 'none';
+    if (queueInfoEl) queueInfoEl.style.display = 'none';
+    if (lastSync && lastSyncEl) {
+      const dt = new Date(lastSync);
+      if (lastSyncEl) lastSyncEl.textContent = `Dernière sync : ${dt.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}`;
+      if (syncInfoEl) syncInfoEl.style.display = 'flex';
+    }
+  }
+}
+
+function prochaineSyncHeure() {
+  const now = new Date();
+  const h = now.getHours();
+  // Syncs planifiées : 7h et 19h
+  if (h < 7) return 'à 7h00';
+  if (h < 19) return 'à 19h00';
+  return 'demain à 7h00';
+}
+
+// Ajouter à la file sans appel API
+function ajouterAFile(texte) {
+  const queue = getQueue();
+  queue.push({ texte, addedAt: new Date().toISOString() });
+  S.set('mc_queue', queue);
+  updateQueueUI();
+  showToast(`Ajouté à la file (${queue.length} en attente)`);
+}
+
+// Synchroniser la file : 1 seul appel Claude pour tous les éléments
+async function syncerFile() {
   const cle = getCle();
   if (!cle) { showToast('⚠ Configure ta clé API d\'abord'); switchTab('params'); return; }
 
+  const queue = getQueue();
+  if (!queue.length) { showToast('File vide, rien à synchroniser'); return; }
+
+  const btn = document.getElementById('btnSyncQueue');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+  try {
+    const listeTexte = queue.map((q, i) => `${i+1}. "${q.texte}"`).join('\n');
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cle,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-allowance': 'my-public-webui'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: 'Tu extrais des rappels/tâches depuis une liste de textes. Réponds UNIQUEMENT en JSON : un tableau d\'objets avec les champs {"text": "libellé court", "time": "HH:MM ou date courte ou null", "type": "rappel ou todo"}. Pas de markdown, pas d\'explication.',
+        messages: [{ role: 'user', content: `Extrais chaque élément de cette liste :\n${listeTexte}` }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '[]';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    const todos = getTodos();
+    let ajoutés = 0;
+
+    parsed.forEach(item => {
+      const entry = {
+        text: item.text || '(sans titre)',
+        time: item.time || null,
+        done: false,
+        createdAt: new Date().toISOString()
+      };
+      todos.push(entry);
+      ajouterHistorique('rappel', entry.text);
+      ajoutés++;
+    });
+
+    S.set('mc_todos', todos);
+    S.del('mc_queue');
+    S.set('mc_last_sync', new Date().toISOString());
+
+    renderTodos();
+    updateQueueUI();
+    showToast(`${ajoutés} élément(s) synchronisé(s) ✓`);
+
+  } catch(err) {
+    showToast('Erreur sync : ' + err.message);
+  } finally {
+    if (btn) { btn.textContent = '↺ Sync'; btn.disabled = false; }
+  }
+}
+
+// Vérifier si une sync auto est due (2x/jour : 7h et 19h)
+function verifierSyncAuto() {
+  const queue = getQueue();
+  if (!queue.length) return;
+
+  const lastSync = S.get('mc_last_sync', null);
+  const now = new Date();
+  const h = now.getHours();
+
+  // Fenêtres de sync : 7h-8h et 19h-20h
+  const dansFenetre = (h >= 7 && h < 8) || (h >= 19 && h < 20);
+  if (!dansFenetre) return;
+
+  if (lastSync) {
+    const derniere = new Date(lastSync);
+    const diffH = (now - derniere) / 3600000;
+    if (diffH < 6) return; // éviter double sync
+  }
+
+  const cle = getCle();
+  if (cle) {
+    showToast('🔄 Sync automatique…');
+    syncerFile();
+  }
+}
+
+// ────────────────────────────────────────────────
+// ── SAISIE DE RAPPEL / TÂCHE ──
+// Mode direct (avec clé) ou file d'attente (sans)
+// ────────────────────────────────────────────────
+
+async function validerRappel(mode) {
   let texte = '';
   if (mode === 'text') {
     texte = document.getElementById('textRappel').value.trim();
@@ -895,6 +1195,21 @@ async function validerRappel(mode) {
 
   if (!texte) { showToast('⚠ Rien à enregistrer'); return; }
 
+  const cle = getCle();
+
+  // Si pas de clé → file d'attente directe
+  if (!cle) {
+    ajouterAFile(texte);
+    if (mode === 'text') {
+      document.getElementById('textRappel').value = '';
+    } else {
+      document.getElementById('voiceTranscript').style.display = 'none';
+      document.getElementById('btnValidateVoice').style.display = 'none';
+    }
+    return;
+  }
+
+  // Avec clé → interprétation immédiate
   showToast('⏳ Claude interprète…');
 
   try {
@@ -909,19 +1224,18 @@ async function validerRappel(mode) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
-        system: 'Tu extrais les informations d\'un rappel. Réponds UNIQUEMENT en JSON avec les champs: {"text": "libellé court du rappel", "time": "HH:MM ou date courte, ou null si non précisé"}. Pas de markdown, pas d\'explication.',
-        messages: [{ role: 'user', content: `Extrait le rappel depuis: "${texte}"` }]
+        system: 'Tu extrais les informations d\'un rappel ou tâche. Réponds UNIQUEMENT en JSON : {"text": "libellé court", "time": "HH:MM ou date courte ou null", "type": "rappel ou todo"}. Pas de markdown.',
+        messages: [{ role: 'user', content: `Extrais depuis : "${texte}"` }]
       })
     });
     const data = await res.json();
     const raw = data.content?.[0]?.text || '{}';
     const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
 
-    const rappels = getRappels();
-    rappels.push({ text: parsed.text || texte, time: parsed.time || null, createdAt: new Date().toISOString() });
-    S.set('mc_rappels', rappels);
+    const todos = getTodos();
+    todos.push({ text: parsed.text || texte, time: parsed.time || null, done: false, createdAt: new Date().toISOString() });
+    S.set('mc_todos', todos);
 
-    // Historique
     ajouterHistorique('rappel', parsed.text || texte);
 
     if (mode === 'text') {
@@ -931,14 +1245,18 @@ async function validerRappel(mode) {
       document.getElementById('btnValidateVoice').style.display = 'none';
     }
 
-    renderRappels();
-    showToast('Rappel créé ✓');
+    renderTodos();
+    showToast('Tâche créée ✓');
   } catch(err) {
-    showToast('Erreur : ' + err.message);
+    // Fallback file d'attente si erreur API
+    ajouterAFile(texte);
+    showToast('API indisponible — mis en file d\'attente');
   }
 }
 
-// ── Dictée vocale ──
+// ────────────────────────────────────────────────
+// ── DICTÉE VOCALE ──
+// ────────────────────────────────────────────────
 let recognition = null;
 let recording = false;
 
@@ -980,7 +1298,32 @@ function toggleVoice() {
   }
 }
 
-// ── Brief ──
+// ────────────────────────────────────────────────
+// ── BRIEF MATINAL / DU SOIR ──
+// ────────────────────────────────────────────────
+
+function estBriefDuSoir() {
+  const h = new Date().getHours();
+  return h >= 17; // À partir de 17h → brief du soir
+}
+
+function configurerBriefUI() {
+  const soir = estBriefDuSoir();
+  const card = document.getElementById('briefCard');
+  const label = document.getElementById('briefLabel');
+  const btn = document.getElementById('btnBrief');
+
+  if (soir) {
+    card.classList.remove('brief-card');
+    card.classList.add('brief-card', 'brief-card-soir');
+    if (label) label.textContent = 'Brief du soir';
+    if (btn && btn.textContent.includes('Générer')) btn.textContent = '🌙 Générer le brief du soir';
+  } else {
+    if (label) label.textContent = 'Brief matinal';
+    if (btn && btn.textContent.includes('Générer')) btn.textContent = '✦ Générer le brief';
+  }
+}
+
 async function genererBrief() {
   const cle = getCle();
   if (!cle) { showToast('⚠ Configure ta clé API d\'abord'); switchTab('params'); return; }
@@ -990,8 +1333,29 @@ async function genererBrief() {
   btn.disabled = true;
 
   const contexte = getContexte();
-  const rappels = getRappels();
-  const sysPrompt = `Tu es l'assistant personnel de Ben. Génère un brief matinal bref et structuré.${contexte ? '\n\nContexte : ' + contexte : ''}\n\nSois direct, concis, utile. Date du jour en introduction, puis points clés.${rappels.length ? '\n\nRappels existants : ' + rappels.map(r => (r.time ? r.time + ' — ' : '') + r.text).join(', ') : ''}`;
+  const todos = getTodos().filter(t => !t.done);
+  const soir = estBriefDuSoir();
+
+  let sysPrompt;
+
+  if (soir) {
+    sysPrompt = `Tu es l'assistant personnel de Ben. Génère un brief du SOIR bref et structuré.${contexte ? '\nContexte : ' + contexte : ''}
+Objectif du brief du soir :
+1. Bilan rapide de la journée (1-2 phrases)
+2. Ce qui reste à faire ce soir
+3. Agenda du lendemain (points clés)
+4. Rappels importants pour demain
+${todos.length ? '\nTâches en cours : ' + todos.map(t => (t.time ? t.time + ' — ' : '') + t.text).join(', ') : ''}
+Sois concis, bienveillant, orienté action. Pas de fioritures.`;
+  } else {
+    sysPrompt = `Tu es l'assistant personnel de Ben. Génère un brief MATINAL bref et structuré.${contexte ? '\nContexte : ' + contexte : ''}
+Objectif du brief matinal :
+1. Bonjour + date du jour
+2. Points clés de la journée (agenda, priorités)
+3. Rappels importants du jour
+${todos.length ? '\nTâches à faire : ' + todos.map(t => (t.time ? t.time + ' — ' : '') + t.text).join(', ') : ''}
+Sois direct, concis, utile. Pas de fioritures.`;
+  }
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1006,7 +1370,7 @@ async function genererBrief() {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
         system: sysPrompt,
-        messages: [{ role: 'user', content: 'Génère mon brief matinal.' }]
+        messages: [{ role: 'user', content: soir ? 'Génère mon brief du soir.' : 'Génère mon brief matinal.' }]
       })
     });
 
@@ -1020,11 +1384,12 @@ async function genererBrief() {
 
       const now = new Date();
       const meta = document.getElementById('briefMeta');
-      meta.textContent = `Généré le ${now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })} à ${now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })}`;
+      const typeLabel = soir ? 'Brief du soir' : 'Brief matinal';
+      meta.textContent = `${typeLabel} — ${now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })} à ${now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })}`;
       meta.style.display = 'block';
-      document.getElementById('briefTitle').textContent = 'Brief du ' + now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' });
 
-      // Sauvegarder dans historique
+      document.getElementById('briefTitle').textContent = `${typeLabel} du ${now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}`;
+
       ajouterHistorique('brief', text);
     } else {
       throw new Error(data.error?.message || 'Réponse inattendue');
@@ -1032,7 +1397,7 @@ async function genererBrief() {
   } catch(err) {
     showToast('Erreur : ' + err.message);
   } finally {
-    btn.textContent = '↺ Actualiser';
+    btn.textContent = soir ? '↺ Actualiser' : '↺ Actualiser';
     btn.disabled = false;
   }
 }
@@ -1045,7 +1410,6 @@ function ajouterHistorique(type, contenu) {
     contenu,
     date: new Date().toLocaleString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
   });
-  // Garder 30 entrées max
   if (hist.length > 30) hist.pop();
   S.set('mc_historique', hist);
 }
@@ -1062,7 +1426,7 @@ function renderHistorique() {
       <div class="history-header" onclick="toggleHistoryItem(${i})">
         <span class="history-date">${item.date}</span>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span class="history-type ${item.type}">${item.type === 'brief' ? 'Brief' : 'Rappel'}</span>
+          <span class="history-type ${item.type}">${item.type === 'brief' ? 'Brief' : item.type === 'todo' ? 'Tâche' : 'Rappel'}</span>
           <span class="history-chevron" id="chevron-${i}">▾</span>
         </div>
       </div>
@@ -1090,11 +1454,12 @@ function clearHistorique() {
 // ── Export / Import ──
 function exporterConfig() {
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     api_key: getCle(),
     contexte: getContexte(),
-    rappels: getRappels(),
+    todos: getTodos(),
+    queue: getQueue(),
     historique: getHistoire()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1114,14 +1479,16 @@ function importerConfig(event) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.api_key)   S.set('mc_api_key',     data.api_key);
-      if (data.contexte)  S.set('mc_contexte',     data.contexte);
-      if (data.rappels)   S.set('mc_rappels',      data.rappels);
+      if (data.api_key)    S.set('mc_api_key',    data.api_key);
+      if (data.contexte)   S.set('mc_contexte',    data.contexte);
+      if (data.todos)      S.set('mc_todos',       data.todos);
+      // Compat v1 : importer les anciens rappels comme todos
+      if (data.rappels && !data.todos) S.set('mc_todos', data.rappels.map(r => ({...r, done: false})));
+      if (data.queue)      S.set('mc_queue',       data.queue);
       if (data.historique) S.set('mc_historique',  data.historique);
       updateStatuts();
-      renderRappels();
+      renderTodos();
       showToast('Configuration importée ✓');
-      // Rafraîchir les champs
       const cle = getCle();
       if (cle) document.getElementById('inputApiKey').value = cle;
       const ctx = getContexte();
@@ -1136,11 +1503,11 @@ function importerConfig(event) {
 
 function resetConfig() {
   if (!confirm('Réinitialiser toute la configuration ? Cette action est irréversible.')) return;
-  ['mc_api_key','mc_contexte','mc_rappels','mc_historique'].forEach(k => S.del(k));
+  ['mc_api_key','mc_contexte','mc_todos','mc_queue','mc_historique','mc_last_sync'].forEach(k => S.del(k));
   document.getElementById('inputApiKey').value = '';
   document.getElementById('inputContexte').value = '';
   updateStatuts();
-  renderRappels();
+  renderTodos();
   showToast('Configuration réinitialisée');
 }
 
@@ -1150,7 +1517,12 @@ function escHtml(str) {
 }
 
 // ── Init ──
-renderRappels();
+configurerBriefUI();
+renderTodos();
+updateQueueUI();
+verifierSyncAuto();
+// Recheck toutes les 30 minutes pour la sync auto
+setInterval(verifierSyncAuto, 30 * 60 * 1000);
 </script>
 </body>
 </html>
