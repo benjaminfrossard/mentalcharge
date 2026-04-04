@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1046,6 +1047,19 @@
             </div>
             <div class="setting-value ko" id="statusGoogle">Non connecté</div>
           </div>
+        </div>
+        <!-- Bouton connexion Google -->
+        <div id="googleConnectZone" style="margin-top:10px;">
+          <button class="btn btn-ghost" id="btnGoogleConnect" onclick="connecterGoogle()">
+            <svg width="16" height="16" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Connecter Google
+          </button>
+          <button class="btn btn-danger" id="btnGoogleDisconnect" onclick="deconnecterGoogle()" style="display:none; font-size:12.5px; margin-top:8px;">
+            Déconnecter Google
+          </button>
+          <div id="googleUserEmail" style="display:none; font-size:12px; color:var(--ok); margin-top:8px;"></div>
+        </div>
+        <div class="settings-list" style="margin-top:10px;">
           <div class="setting-row">
             <div>
               <div class="setting-label">Notifications</div>
@@ -1162,6 +1176,7 @@ function switchTab(tab) {
     if (nav) nav.classList.toggle('active', t === tab);
   });
   if (tab === 'historique') renderHistorique();
+  if (tab === 'agenda') rafraichirAgenda();
   if (tab === 'params') {
     const cle = getCle();
     if (cle) document.getElementById('inputApiKey').value = cle;
@@ -1186,15 +1201,45 @@ function updateStatuts() {
   elNotif.textContent = np === 'granted' ? 'Autorisé ✓' : np === 'denied' ? 'Refusé' : 'Non autorisé';
   elNotif.className = `setting-value ${np === 'granted' ? 'ok' : 'ko'}`;
 
-  const elBanner = document.getElementById('setupBanner');
+  // ── Statut Google ──
+  const googleToken  = getGoogleToken();
+  const googleEmail  = localStorage.getItem('mc_google_email') || '';
+  const elGoogle     = document.getElementById('statusGoogle');
+  const btnConnect   = document.getElementById('btnGoogleConnect');
+  const btnDisconnect = document.getElementById('btnGoogleDisconnect');
+  const emailDiv     = document.getElementById('googleUserEmail');
+
+  if (googleToken) {
+    elGoogle.textContent = 'Connecté ✓';
+    elGoogle.className = 'setting-value ok';
+    if (btnConnect)    btnConnect.style.display    = 'none';
+    if (btnDisconnect) btnDisconnect.style.display = 'block';
+    if (emailDiv && googleEmail) {
+      emailDiv.textContent = '✓ ' + googleEmail;
+      emailDiv.style.display = 'block';
+    }
+  } else {
+    elGoogle.textContent = 'Non connecté';
+    elGoogle.className = 'setting-value ko';
+    if (btnConnect)    btnConnect.style.display    = 'block';
+    if (btnDisconnect) btnDisconnect.style.display = 'none';
+    if (emailDiv)      emailDiv.style.display      = 'none';
+  }
+
+  const elBanner    = document.getElementById('setupBanner');
   const elStatusRow = document.getElementById('statusRow');
-  if (cle) {
+
+  if (cle && googleToken) {
+    elBanner.style.display = 'none';
+    elStatusRow.innerHTML = '<span class="badge ok"><span class="dot"></span>API prête</span><span class="badge ok"><span class="dot"></span>Google connecté</span>';
+  } else if (cle) {
     elBanner.style.display = 'none';
     elStatusRow.innerHTML = '<span class="badge ok"><span class="dot"></span>API prête</span><span class="badge warn"><span class="dot"></span>Google à connecter</span>';
   } else {
     elBanner.style.display = 'flex';
     elStatusRow.innerHTML = '<span class="badge warn"><span class="dot"></span>Google non connecté</span><span class="badge warn"><span class="dot"></span>API non configurée</span>';
   }
+
   updateQueueUI();
 }
 updateStatuts();
@@ -1759,9 +1804,28 @@ async function genererBrief() {
     ? `Météo du jour : ${_meteoData.icon} ${_meteoData.temp}°C, ${_meteoData.desc}, min ${_meteoData.tempMin}°C / max ${_meteoData.tempMax}°C${_meteoData.precipProb > 30 ? `, risque pluie ${_meteoData.precipProb}%` : ''}.`
     : '';
 
+  // ── Données Google (Gmail + Calendar) si connecté ──
+  let gmailTexte = '';
+  let calendarTexte = '';
+  const googleToken = getGoogleToken();
+  if (googleToken) {
+    try {
+      btn.textContent = '⏳ Récupération agenda et emails…';
+      [calendarTexte, gmailTexte] = await Promise.all([
+        fetchCalendar(googleToken),
+        fetchGmail(googleToken)
+      ]);
+    } catch(e) {
+      // On continue sans les données Google
+    }
+    btn.textContent = '⏳ Génération du brief…';
+  }
+
   // Prompt système
-  const sysPrompt = `Tu es l'assistant personnel de Ben.${contexte ? '\n\nCe que tu sais sur Ben :\n' + contexte : ''}
+  const sysPrompt = `Tu es l'assistant personnel de Ben, anesthésiste-réanimateur en chirurgie cardiaque à Paris.${contexte ? '\n\nCe que tu sais sur Ben :\n' + contexte : ''}
 ${meteoTexte ? '\n' + meteoTexte : ''}
+${calendarTexte ? '\n\nAgenda :\n' + calendarTexte : ''}
+${gmailTexte ? '\n\nEmails reçus dans les dernières 24h (lus et non lus) :\n' + gmailTexte : ''}
 ${soir
   ? `\nGénère un brief du SOIR bref et structuré :
 1. Bilan rapide de la journée (1-2 phrases)
@@ -1771,7 +1835,8 @@ ${soir
   : `\nGénère un brief MATINAL bref et structuré :
 1. Bonjour + date du jour + météo si dispo
 2. Points clés de la journée (agenda, priorités)
-3. Rappels importants du jour`
+3. Emails importants à traiter (basé sur le résumé)
+4. Rappels importants du jour`
 }
 ${todosTexte ? `\nTâches en cours : ${todosTexte}` : ''}
 
@@ -2004,6 +2069,164 @@ function resetConfig() {
 // ── Utilitaires ──
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ────────────────────────────────────────────────
+// ── GOOGLE OAUTH ──
+// Utilise Google Identity Services (token model)
+// ────────────────────────────────────────────────
+
+const GOOGLE_CLIENT_ID = '468976687043-issgk3ifie6k35l747t5m3bvnmcie4sc.apps.googleusercontent.com';
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly';
+
+let _googleToken = null;      // token courant en mémoire
+let _tokenClient  = null;     // client GIS
+
+function getGoogleToken() {
+  // Essaie d'abord la mémoire, puis localStorage
+  if (_googleToken && _googleToken.expires_at > Date.now()) return _googleToken.access_token;
+  try {
+    const stored = JSON.parse(localStorage.getItem('mc_google_token') || 'null');
+    if (stored && stored.expires_at > Date.now()) {
+      _googleToken = stored;
+      return stored.access_token;
+    }
+  } catch {}
+  return null;
+}
+
+function saveGoogleToken(accessToken, expiresIn) {
+  const token = { access_token: accessToken, expires_at: Date.now() + (expiresIn - 60) * 1000 };
+  _googleToken = token;
+  localStorage.setItem('mc_google_token', JSON.stringify(token));
+}
+
+function connecterGoogle() {
+  if (!window.google) { showToast('⚠ Bibliothèque Google non chargée, réessaie dans 2s'); return; }
+
+  if (!_tokenClient) {
+    _tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GOOGLE_SCOPES,
+      callback: (resp) => {
+        if (resp.error) { showToast('Erreur Google : ' + resp.error); return; }
+        saveGoogleToken(resp.access_token, resp.expires_in);
+        // Récupérer l'email de l'utilisateur
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + resp.access_token }
+        })
+        .then(r => r.json())
+        .then(info => {
+          if (info.email) localStorage.setItem('mc_google_email', info.email);
+          updateStatuts();
+          showToast('Google connecté ✓');
+        })
+        .catch(() => { updateStatuts(); showToast('Google connecté ✓'); });
+      }
+    });
+  }
+  _tokenClient.requestAccessToken({ prompt: getGoogleToken() ? '' : 'consent' });
+}
+
+function deconnecterGoogle() {
+  const token = getGoogleToken();
+  if (token && window.google) google.accounts.oauth2.revoke(token, () => {});
+  _googleToken = null;
+  localStorage.removeItem('mc_google_token');
+  localStorage.removeItem('mc_google_email');
+  updateStatuts();
+  showToast('Google déconnecté');
+}
+
+// ── Fetch Gmail — 50 emails inbox des dernières 24h (lus + non lus) ──
+async function fetchGmail(token) {
+  try {
+    const listRes = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=in:inbox+newer_than:1d`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    const listData = await listRes.json();
+    if (!listData.messages || !listData.messages.length) return '';
+
+    // Récupérer les métadonnées en parallèle (expéditeur + objet + snippet)
+    const details = await Promise.all(
+      listData.messages.map(m =>
+        fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From`,
+          { headers: { Authorization: 'Bearer ' + token } }
+        ).then(r => r.json())
+      )
+    );
+
+    return details.map(msg => {
+      const headers  = msg.payload?.headers || [];
+      const subject  = headers.find(h => h.name === 'Subject')?.value || '(sans objet)';
+      const from     = headers.find(h => h.name === 'From')?.value || '';
+      const fromClean = from.replace(/<[^>]+>/, '').trim() || from;
+      const snippet  = (msg.snippet || '').slice(0, 120);
+      const unread   = msg.labelIds?.includes('UNREAD') ? '[non lu] ' : '';
+      return `${unread}De : ${fromClean} | ${subject} | ${snippet}`;
+    }).join('\n');
+  } catch (e) {
+    return '';
+  }
+}
+
+// ── Fetch Google Calendar — J et J+1 ──
+async function fetchCalendar(token) {
+  try {
+    const now   = new Date();
+    const debut = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const fin   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).toISOString();
+
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${debut}&timeMax=${fin}&singleEvents=true&orderBy=startTime&maxResults=20`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    const data = await res.json();
+    if (!data.items || !data.items.length) return '';
+
+    const today     = now.toDateString();
+    const tomorrow  = new Date(now.getTime() + 86400000).toDateString();
+
+    const evtsAujourdhui = [];
+    const evtsDemain     = [];
+
+    data.items.forEach(evt => {
+      const start = evt.start?.dateTime || evt.start?.date || '';
+      const d = new Date(start);
+      const label = evt.summary || '(sans titre)';
+      const heure = evt.start?.dateTime
+        ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        : 'Journée entière';
+      const lieu = evt.location ? ` @ ${evt.location}` : '';
+      const ligne = `${heure} — ${label}${lieu}`;
+
+      if (d.toDateString() === today)    evtsAujourdhui.push(ligne);
+      else if (d.toDateString() === tomorrow) evtsDemain.push(ligne);
+    });
+
+    let out = '';
+    if (evtsAujourdhui.length) out += `Aujourd'hui :\n` + evtsAujourdhui.map(e => `- ${e}`).join('\n');
+    if (evtsDemain.length)     out += `\n\nDemain :\n` + evtsDemain.map(e => `- ${e}`).join('\n');
+    return out;
+  } catch (e) {
+    return '';
+  }
+}
+
+// ── Mise à jour de l'onglet Agenda ──
+async function rafraichirAgenda() {
+  const token = getGoogleToken();
+  const el = document.getElementById('agendaContent');
+  if (!token) {
+    el.textContent = 'Connecte Google Calendar pour voir tes événements.';
+    return;
+  }
+  el.textContent = 'Chargement…';
+  const cal = await fetchCalendar(token);
+  if (!cal) { el.textContent = 'Aucun événement à venir.'; return; }
+  el.innerHTML = cal.replace(/\n/g, '<br>');
 }
 
 // ── Init ──
