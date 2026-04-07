@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v6'; // ← bumper à chaque déploiement
+const CACHE_VERSION = 'v7'; // ← bumper à chaque déploiement
 const CACHE_NAME = `mentalcharge-${CACHE_VERSION}`;
 const ASSETS = [
   './index.html',
