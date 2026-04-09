@@ -1,0 +1,3386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1A202C" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="MentalCharge" />
+  <title>MentalCharge</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #FFFFFF;
+      --bg2:         #F7FAFC;
+      --surface:     #FFFFFF;
+      --surface2:    #EDF2F7;
+      --border:      #E2E8F0;
+      --border2:     #CBD5E0;
+      --text:        #1A202C;
+      --text-muted:  #4A5568;
+      --text-dim:    #A0AEC0;
+      --accent:      #3182CE;
+      --accent-light:#EBF8FF;
+      --accent2:     #805AD5;
+      --ok:          #38A169;
+      --ok-light:    #F0FFF4;
+      --warn:        #DD6B20;
+      --warn-light:  #FFFAF0;
+      --danger:      #E53E3E;
+      --danger-light:#FFF5F5;
+      --r:           14px;
+      --r-sm:        10px;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:   0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:          #1A202C;
+        --bg2:         #171923;
+        --surface:     #2D3748;
+        --surface2:    #4A5568;
+        --border:      #2D3748;
+        --border2:     #4A5568;
+        --text:        #F7FAFC;
+        --text-muted:  #A0AEC0;
+        --text-dim:    #718096;
+        --accent:      #63B3ED;
+        --accent-light:#1A365D;
+        --accent2:     #B794F4;
+        --ok:          #68D391;
+        --ok-light:    #1C4532;
+        --warn:        #F6AD55;
+        --warn-light:  #3D2708;
+        --danger:      #FC8181;
+        --danger-light:#3D1515;
+        --shadow-sm:   0 1px 3px rgba(0,0,0,0.3);
+        --shadow-md:   0 4px 6px rgba(0,0,0,0.3);
+      }
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg2);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 28px 20px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      animation: fadeDown 0.5s ease both;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .greeting {
+      font-size: clamp(22px, 6vw, 28px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--text);
+    }
+
+    .date-chip {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      margin-top: 3px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--bg2);
+    }
+
+    .badge.ok   { color: var(--ok);   border-color: #C6F6D5; background: var(--ok-light); }
+    .badge.warn { color: var(--warn); border-color: #FEEBC8; background: var(--warn-light); }
+    .badge.info { color: var(--accent); border-color: #BEE3F8; background: var(--accent-light); }
+
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      padding: 16px 16px 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      background: var(--bg2);
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.04s; }
+    .card:nth-child(2) { animation-delay: 0.08s; }
+    .card:nth-child(3) { animation-delay: 0.12s; }
+    .card:nth-child(4) { animation-delay: 0.16s; }
+    .card:nth-child(5) { animation-delay: 0.20s; }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Brief card */
+    .brief-card {
+      background: linear-gradient(145deg, var(--accent-light) 0%, var(--surface) 60%);
+      border-color: #BEE3F8;
+    }
+
+    .brief-placeholder {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.6;
+      margin-top: 8px;
+      padding: 12px 14px;
+      border: 1px dashed var(--border2);
+      border-radius: var(--r-sm);
+      background: var(--bg2);
+    }
+
+    .brief-content {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    .brief-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    /* Skeleton screen */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      height: 14px;
+      margin-top: 8px;
+    }
+    .skeleton.sk-lg { height: 14px; width: 100%; }
+    .skeleton.sk-md { height: 14px; width: 75%; }
+    .skeleton.sk-sm { height: 14px; width: 50%; }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border-radius: var(--r-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      margin-top: 12px;
+      box-shadow: 0 2px 4px rgba(49,130,206,0.3);
+    }
+
+    .btn-primary:hover  { background: #2B6CB0; box-shadow: 0 3px 8px rgba(49,130,206,0.4); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border2);
+      width: 100%;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); background: var(--bg2); }
+
+    .btn-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #FEB2B2;
+      width: 100%;
+    }
+    .btn-danger:hover { background: #FED7D7; }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 12.5px;
+      width: auto;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* Setup banner */
+    .setup-banner {
+      background: var(--warn-light);
+      border: 1px solid #FEEBC8;
+      border-radius: var(--r);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      animation: fadeUp 0.4s 0.22s ease both;
+    }
+
+    .setup-banner-icon { font-size: 17px; margin-top: 1px; flex-shrink: 0; }
+    .setup-banner-text strong { display: block; font-size: 13px; font-weight: 600; color: var(--warn); margin-bottom: 3px; }
+    .setup-banner-text span { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Rappels */
+    .rappel-list { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+
+    .rappel-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+    }
+
+    .rappel-item .time { font-size: 11px; color: var(--accent); min-width: 40px; font-weight: 600; }
+    .rappel-item .label { flex: 1; color: var(--text); }
+    .rappel-item .del-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 15px; padding: 0 2px; transition: color 0.15s; }
+    .rappel-item .del-btn:hover { color: var(--danger); }
+
+    .rappel-empty { font-size: 13px; color: var(--text-dim); font-style: italic; padding: 4px 0; }
+
+    /* Dictée & saisie */
+    .input-mode-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .mode-tab {
+      flex: 1;
+      padding: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .mode-tab.active {
+      background: var(--accent-light);
+      border-color: #BEE3F8;
+      color: var(--accent);
+    }
+
+    .voice-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--bg2);
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--r-sm);
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .voice-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .voice-btn.recording { border-color: var(--danger); color: var(--danger); border-style: solid; animation: pulse 1.1s infinite; }
+
+    .text-input-area {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      outline: none;
+      resize: none;
+      min-height: 80px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      line-height: 1.5;
+    }
+
+    .text-input-area:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.12); }
+    .text-input-area::placeholder { color: var(--text-dim); }
+
+    /* Settings */
+    .settings-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+    }
+
+    .setting-label { font-size: 13.5px; color: var(--text); font-weight: 500; }
+    .setting-sub   { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+
+    .setting-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    .setting-value.ko { color: var(--warn); }
+    .setting-value.ok { color: var(--ok); }
+
+    /* Input */
+    .input-field {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      margin-top: 8px;
+    }
+
+    .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.12); }
+    .input-field::placeholder { color: var(--text-dim); }
+
+    /* Historique */
+    .history-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+    .history-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .history-header:hover { background: var(--border); }
+
+    .history-date { font-size: 12.5px; font-weight: 500; color: var(--text); }
+    .history-type {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .history-type.brief  { background: var(--accent-light); color: var(--accent); }
+    .history-type.rappel { background: #FAF5FF; color: var(--accent2); }
+    .history-type.todo   { background: var(--ok-light); color: var(--ok); }
+
+    .history-chevron { color: var(--text-dim); font-size: 12px; transition: transform 0.2s; }
+    .history-chevron.open { transform: rotate(180deg); }
+
+    .history-body {
+      display: none;
+      padding: 0 14px 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      border-top: 1px solid var(--border);
+    }
+
+    .history-body.open { display: block; padding-top: 10px; }
+
+    .history-empty { font-size: 13px; color: var(--text-dim); font-style: italic; padding: 4px 0; }
+
+    /* ── TODOLIST ── */
+    .todo-list { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      transition: opacity 0.25s, transform 0.15s;
+    }
+
+    .todo-item:active { transform: scale(0.99); }
+    .todo-item.done { opacity: 0.45; }
+
+    .todo-checkbox {
+      width: 19px;
+      height: 19px;
+      border: 2px solid var(--border2);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 11px;
+      color: transparent;
+    }
+
+    .todo-checkbox:hover { border-color: var(--accent); background: var(--accent-light); }
+
+    .todo-item.done .todo-checkbox {
+      background: var(--ok);
+      border-color: var(--ok);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    .todo-label {
+      flex: 1;
+      color: var(--text);
+      transition: color 0.2s;
+      line-height: 1.4;
+    }
+
+    .todo-item.done .todo-label {
+      text-decoration: line-through;
+      color: var(--text-dim);
+    }
+
+    .todo-time { font-size: 11px; color: var(--accent); min-width: 40px; font-weight: 600; }
+
+    .todo-del-btn {
+      background: none; border: none; color: var(--text-dim);
+      cursor: pointer; font-size: 15px; padding: 2px 4px;
+      transition: color 0.15s; border-radius: 4px;
+    }
+    .todo-del-btn:hover { color: var(--danger); background: var(--danger-light); }
+
+    .todo-empty { font-size: 13px; color: var(--text-dim); font-style: italic; padding: 4px 0; }
+
+    /* File d'attente */
+    .queue-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #E9D8FD;
+      background: #FAF5FF;
+      color: var(--accent2);
+      cursor: pointer;
+    }
+
+    /* Brief du soir */
+    .brief-card-soir {
+      background: linear-gradient(145deg, #FAF5FF 0%, var(--surface) 60%);
+      border-color: #E9D8FD;
+    }
+
+    /* Sync info */
+    .sync-info {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── SUGGESTIONS DEPUIS BRIEF ── */
+    .suggestions-bloc {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: var(--ok-light);
+      border: 1px solid #C6F6D5;
+      border-radius: var(--r-sm);
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .suggestions-titre {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ok);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .suggestion-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      background: rgba(255,255,255,0.7);
+      font-size: 12.5px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .suggestion-item:hover { background: rgba(255,255,255,0.95); }
+    .suggestion-item:last-child { margin-bottom: 0; }
+
+    .suggestion-check {
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid #9AE6B4;
+      border-radius: 4px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: transparent;
+      background: transparent;
+      transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .suggestion-item.selected .suggestion-check {
+      background: var(--ok);
+      border-color: var(--ok);
+      color: #fff;
+    }
+
+    .suggestion-time { font-size: 11px; color: var(--accent); font-weight: 600; min-width: 36px; }
+    .suggestion-text { flex: 1; }
+
+    .suggestions-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* ── MÉTÉO ── */
+    .meteo-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--accent-light);
+      border: 1px solid #BEE3F8;
+      border-radius: var(--r-sm);
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .meteo-strip .meteo-temp {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .meteo-strip .meteo-desc { flex: 1; }
+    .meteo-strip .meteo-icon { font-size: 20px; }
+
+    /* ── MÉMOIRE ── */
+    .memoire-validation {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: var(--warn-light);
+      border: 1px solid #FDE68A;
+      border-radius: var(--r-sm);
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .memoire-validation-titre {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--warn);
+      margin-bottom: 10px;
+    }
+
+    .memoire-item-preview {
+      background: var(--surface);
+      border: 1px solid #FDE68A;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .memoire-item-preview:last-of-type { margin-bottom: 0; }
+
+    .memoire-contenu {
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .memoire-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .toggle-persistant {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: var(--bg2);
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .toggle-persistant.on {
+      background: #FFFBEB;
+      border-color: #F59E0B;
+      color: #92400E;
+    }
+
+    .memoire-type-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .memoire-type-badge.persistant {
+      background: #FFFBEB;
+      color: #92400E;
+    }
+
+    /* ── CHAT ── */
+    .chat-wrap {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - 130px);
+      gap: 0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 0 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-msg {
+      max-width: 88%;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 10px 14px;
+      border-radius: 16px;
+      animation: fadeUp 0.2s ease both;
+    }
+
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-msg.assistant {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-msg.assistant p { margin-bottom: 6px; }
+    .chat-msg.assistant p:last-child { margin-bottom: 0; }
+    .chat-msg.assistant ul { margin: 4px 0 4px 14px; }
+    .chat-msg.assistant li { margin: 2px 0; list-style: disc; }
+    .chat-msg.assistant h3 { font-size: 13px; font-weight: 600; margin: 8px 0 3px; }
+    .chat-msg.assistant h4 { font-size: 12px; font-weight: 600; margin: 6px 0 2px; }
+
+    .chat-msg.thinking {
+      align-self: flex-start;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 13px;
+    }
+
+    .chat-msg.thinking::after {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      margin-left: 4px;
+      animation: pulse 1s infinite;
+      vertical-align: middle;
+    }
+
+    .chat-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-dim);
+      font-size: 13px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .chat-empty-icon { font-size: 32px; opacity: 0.5; }
+
+    .chat-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 0 4px;
+    }
+
+    .chat-suggestion-pill {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .chat-suggestion-pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      padding: 10px 0 4px;
+      border-top: 1px solid var(--border);
+      margin-top: 6px;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      max-height: 120px;
+      min-height: 42px;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+      overflow-y: auto;
+    }
+
+    .chat-input:focus { border-color: var(--accent); }
+    .chat-input::placeholder { color: var(--text-dim); }
+
+    .chat-send-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      box-shadow: 0 2px 4px rgba(49,130,206,0.3);
+    }
+
+    .chat-send-btn:hover { background: #2B6CB0; }
+    .chat-send-btn:active { transform: scale(0.95); }
+    .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .chat-send-btn svg { width: 18px; height: 18px; stroke: #fff; }
+
+    .chat-clear-btn {
+      font-size: 11px;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.15s;
+      align-self: center;
+    }
+
+    .chat-clear-btn:hover { color: var(--danger); }
+
+    /* ── RAISONNEMENT PROACTIF ── */
+    .proactif-card {
+      background: linear-gradient(145deg, #FFFAF0 0%, var(--surface) 70%);
+      border-color: #FEEBC8;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .proactif-card { background: linear-gradient(145deg, #3D2708 0%, var(--surface) 70%); border-color: #744210; }
+    }
+
+    .proactif-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      margin-bottom: 7px;
+      font-size: 13px;
+    }
+
+    .proactif-item:last-child { margin-bottom: 0; }
+
+    .proactif-urgence {
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .proactif-body { flex: 1; }
+
+    .proactif-domaine {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 3px;
+    }
+
+    .proactif-texte {
+      color: var(--text);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .proactif-detail {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    .proactif-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    /* Export/import */
+    .export-zone {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 12px 14px;
+      margin-top: 8px;
+    }
+
+    .export-zone p { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px; }
+
+    /* Sections */
+    .section { display: none; }
+    .section.active { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Footer nav */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+      z-index: 100;
+      box-shadow: 0 -1px 0 var(--border), 0 -4px 12px rgba(0,0,0,0.06);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 7px 4px;
+      color: var(--text-dim);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: color 0.15s;
+      border: none;
+      background: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .nav-item.active { color: var(--accent); }
+    .nav-item svg { width: 21px; height: 21px; stroke-width: 1.75; }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: var(--surface);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 200;
+      box-shadow: var(--shadow-md);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.55; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="greeting" id="greeting">Bonjour, Ben.</div>
+      <div class="date-chip" id="datechip">—</div>
+    </div>
+    <div class="status-row" id="statusRow">
+      <span class="badge warn"><span class="dot"></span>Google non connecté</span>
+      <span class="badge warn"><span class="dot"></span>API non configurée</span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main id="mainContent">
+
+    <!-- Bandeau setup -->
+    <div class="setup-banner" id="setupBanner">
+      <div class="setup-banner-icon">⚙️</div>
+      <div class="setup-banner-text">
+        <strong>Configuration requise</strong>
+        <span>Entre ta clé API Anthropic dans les paramètres pour activer le brief matinal.</span>
+      </div>
+    </div>
+
+    <!-- ── SECTION BRIEF ── -->
+    <div class="section active" id="sectionBrief">
+
+      <div class="card brief-card" id="briefCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+          <div class="card-label" id="briefLabel" style="margin-bottom:0;">Brief matinal</div>
+          <select id="selectModelBrief" onchange="sauvegarderModele('brief',this.value)"
+            style="background:transparent;border:none;font-family:Inter,sans-serif;font-size:11px;font-weight:600;color:var(--text-dim);cursor:pointer;outline:none;padding:2px 0;">
+            <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+          </select>
+        </div>
+        <div class="card-title" id="briefTitle">Pas encore configuré</div>
+        <div id="briefPlaceholder" class="brief-placeholder">
+          Une fois l'API configurée, ton brief s'affichera ici : agenda du jour, emails importants, météo, rappels à venir.
+        </div>
+        <div id="meteoStrip" style="display:none;" class="meteo-strip">
+          <span class="meteo-icon" id="meteoIcon">🌤</span>
+          <span class="meteo-temp" id="meteoTemp">—</span>
+          <span class="meteo-desc" id="meteoDesc">Chargement météo…</span>
+        </div>
+        <div id="briefContent" class="brief-content" style="display:none;"></div>
+        <div id="briefSkeleton" style="display:none; margin-top:8px;">
+          <div class="skeleton sk-lg" style="margin-bottom:8px;"></div>
+          <div class="skeleton sk-lg" style="margin-bottom:8px;"></div>
+          <div class="skeleton sk-md" style="margin-bottom:8px;"></div>
+          <div class="skeleton sk-lg" style="margin-bottom:8px;"></div>
+          <div class="skeleton sk-sm"></div>
+        </div>
+        <div id="briefMeta" class="brief-meta" style="display:none;"></div>
+
+        <!-- Suggestions de tâches extraites du brief -->
+        <div id="briefSuggestions" style="display:none;">
+          <div class="suggestions-bloc">
+            <div class="suggestions-titre">✦ Tâches détectées</div>
+            <div id="suggestionsList"></div>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" id="btnBrief" onclick="genererBrief()" style="flex:1; margin-top:0;">
+            ✦ Générer le brief
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btnSyncQueue" onclick="syncerFile()" title="Synchroniser la file d'attente" style="display:none;">↺ Sync</button>
+        </div>
+        <div class="sync-info" id="syncInfo" style="display:none;">
+          <span id="queueCount"></span>
+          <span id="lastSyncInfo"></span>
+        </div>
+      </div>
+
+      <!-- Raisonnement proactif -->
+      <div class="card proactif-card" id="proactifCard" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-label" style="margin-bottom:0;">⚡ Points d'attention</div>
+          <span style="font-size:11px;color:var(--text-dim);" id="proactifMeta"></span>
+        </div>
+        <div id="proactifList"></div>
+      </div>
+
+      <!-- Todolist -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div class="card-label" style="margin-bottom:0;">À faire</div>
+          <button class="btn btn-ghost btn-sm" onclick="archiverTodosFaits()" style="font-size:11px; padding:5px 10px; color:var(--text-dim);">Archiver faits</button>
+        </div>
+        <div class="todo-list" id="todoList">
+          <div class="todo-empty">Aucune tâche pour le moment.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Nouveau rappel / tâche</div>
+        <div class="input-mode-tabs">
+          <button class="mode-tab active" id="tabVoice" onclick="switchInputMode('voice')">🎙 Dictée</button>
+          <button class="mode-tab" id="tabText" onclick="switchInputMode('text')">⌨️ Écrire</button>
+        </div>
+
+        <!-- Mode dictée -->
+        <div id="modeVoice">
+          <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">
+            🎙 Appuyer pour dicter
+          </button>
+          <div id="voiceTranscript" style="display:none; margin-top:10px; font-size:13px; color:var(--text-muted); font-style:italic; padding: 8px 12px; background:var(--bg); border-radius:var(--r-sm); border:1px solid var(--border);"></div>
+          <button id="btnValidateVoice" class="btn btn-primary" style="display:none;" onclick="validerRappel('voice')">✓ Ajouter</button>
+        </div>
+
+        <!-- Mode texte -->
+        <div id="modeText" style="display:none;">
+          <textarea class="text-input-area" id="textRappel" placeholder="Ex: Appeler cardiologue demain à 9h, faire les courses ce soir…"></textarea>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="clearTextRappel()">Effacer</button>
+            <button class="btn btn-primary btn-sm" style="flex:1; margin-top:0;" onclick="validerRappel('text')">✓ Ajouter</button>
+          </div>
+        </div>
+
+        <!-- Suggestions tâches éditables depuis saisie -->
+        <div id="suggestionsRappelBloc" style="display:none; margin-top:10px;">
+          <div style="background:var(--ok-light);border:1px solid #C6F6D5;border-radius:var(--r-sm);padding:12px 14px;">
+            <div style="font-size:11.5px;font-weight:600;color:var(--ok);margin-bottom:8px;">✦ Tâches détectées — édite et confirme</div>
+            <div id="suggestionsRappelContainer"></div>
+          </div>
+        </div>
+
+        <!-- Validation mémoire -->
+        <div id="memoireValidation" style="display:none;">
+          <div class="memoire-validation">
+            <div class="memoire-validation-titre">🧠 Claude a extrait ces informations</div>
+            <div id="memoireItems"></div>
+          </div>
+        </div>
+
+        <!-- File d'attente info -->
+        <div id="queueInfo" style="display:none; margin-top:10px;">
+          <div class="sync-info">
+            💾 <span id="queuePendingInfo"></span> — seront interprétés à la prochaine sync.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sectionBrief -->
+
+    <!-- ── SECTION AGENDA ── -->
+    <div class="section" id="sectionAgenda">
+      <div class="card">
+        <div class="card-label">Agenda</div>
+        <div class="card-title">Aujourd'hui</div>
+        <div class="card-sub" id="agendaContent">Connecte Google Calendar pour voir tes événements.</div>
+      </div>
+    </div>
+
+    <!-- ── SECTION HISTORIQUE ── -->
+    <div class="section" id="sectionHistorique">
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div class="card-label" style="margin-bottom:0;">Historique</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearHistorique()" style="font-size:11px; padding:5px 10px; color:var(--text-dim);">Tout effacer</button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">Aucun historique pour le moment.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION PARAMS ── -->
+    <div class="section" id="sectionParams">
+
+      <!-- Clé API -->
+      <div class="card">
+        <div class="card-label">API Anthropic</div>
+        <div style="position:relative; margin-top:8px;">
+          <input class="input-field" type="password" id="inputApiKey" placeholder="sk-ant-…" autocomplete="off" style="margin-top:0; padding-right:44px;" />
+          <button onclick="toggleApiKeyVisibility()" id="btnShowKey" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-dim); font-size:16px; padding:4px;" title="Afficher/masquer">👁</button>
+        </div>
+        <button class="btn btn-primary" onclick="sauvegarderCle()" style="margin-top:10px;">Sauvegarder la clé</button>
+      </div>
+
+      <!-- Statut -->
+      <div class="card" style="animation-delay:0.12s">
+        <div class="card-label">Statut</div>
+        <div class="settings-list">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Clé Anthropic</div>
+              <div class="setting-sub">claude-sonnet-4-5</div>
+            </div>
+            <div class="setting-value ko" id="statusApiKey">Non configurée</div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Google OAuth</div>
+              <div class="setting-sub">Gmail + Calendar</div>
+            </div>
+            <div class="setting-value ko" id="statusGoogle">Non connecté</div>
+          </div>
+        </div>
+        <!-- Bouton connexion Google -->
+        <div id="googleConnectZone" style="margin-top:10px;">
+          <button class="btn btn-ghost" id="btnGoogleConnect" onclick="connecterGoogle()">
+            <svg width="16" height="16" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Connecter Google
+          </button>
+          <button class="btn btn-danger" id="btnGoogleDisconnect" onclick="deconnecterGoogle()" style="display:none; font-size:12.5px; margin-top:8px;">
+            Déconnecter Google
+          </button>
+          <div id="googleUserEmail" style="display:none; font-size:12px; color:var(--ok); margin-top:8px;"></div>
+        </div>
+        <div class="settings-list" style="margin-top:10px;">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Notifications</div>
+              <div class="setting-sub">Rappels push</div>
+            </div>
+            <div class="setting-value ko" id="statusNotif">Non autorisé</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="demanderNotifications()" style="margin-top:10px;">
+          🔔 Autoriser les notifications
+        </button>
+      </div>
+
+      <!-- Export / Import -->
+      <div class="card" style="animation-delay:0.16s">
+        <div class="card-label">Export / Import</div>
+        <div class="export-zone">
+          <p>Exporte ta configuration (clé API, contexte, rappels, historique) dans un fichier JSON pour la sauvegarder ou la transférer.</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="exporterConfig()" style="flex:1;">⬇ Exporter</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()" style="flex:1;">⬆ Importer</button>
+          </div>
+          <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importerConfig(event)" />
+        </div>
+        <div class="divider" style="margin-top:14px;"></div>
+        <button class="btn btn-danger" onclick="resetConfig()" style="margin-top:12px; font-size:12.5px;">
+          🗑 Réinitialiser toute la configuration
+        </button>
+      </div>
+
+    </div><!-- /sectionParams -->
+
+    <!-- ── SECTION CHAT ── -->
+    <div class="section" id="sectionChat">
+      <div class="card" style="flex:1; display:flex; flex-direction:column; padding:14px 16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+          <div class="card-label" style="margin-bottom:0;">Chat</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <select id="selectModelChat" onchange="sauvegarderModele('chat',this.value)"
+              style="background:transparent;border:none;font-family:Inter,sans-serif;font-size:11px;font-weight:600;color:var(--text-dim);cursor:pointer;outline:none;padding:2px 0;">
+              <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+              <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+            </select>
+            <button class="chat-clear-btn" onclick="clearChat()">Effacer</button>
+          </div>
+        </div>
+        <div class="chat-wrap">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-empty" id="chatEmpty">
+              <div class="chat-empty-icon">💬</div>
+              <div>Pose-moi une question, je connais ton agenda, tes tâches et ta mémoire.</div>
+              <div class="chat-suggestions" id="chatSuggestions">
+                <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Qu'est-ce que j'ai aujourd'hui ?</button>
+                <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Rappelle-moi mes tâches en cours</button>
+                <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Aide-moi à rédiger un message</button>
+                <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Qu'est-ce que j'ai prévu demain ?</button>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Écris un message…" rows="1"
+              onkeydown="chatKeydown(event)"
+              oninput="autoResizeChatInput(this)"></textarea>
+            <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /sectionChat -->
+
+  </main>
+
+  <!-- NAV -->
+  <nav>
+    <button class="nav-item active" id="nav-brief" onclick="switchTab('brief')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+      Brief
+    </button>
+    <button class="nav-item" id="nav-agenda" onclick="switchTab('agenda')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+      Agenda
+    </button>
+    <button class="nav-item" id="nav-historique" onclick="switchTab('historique')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Historique
+    </button>
+    <button class="nav-item" id="nav-chat" onclick="switchTab('chat')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+      Chat
+    </button>
+    <button class="nav-item" id="nav-params" onclick="switchTab('params')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Paramètres
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(console.error);
+}
+
+// ── Toast ──
+function showToast(msg, duration = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── Date & Heure ──
+function updateDateTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const greeting = h < 6 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bonjour' : 'Bonsoir';
+  document.getElementById('greeting').textContent = `${greeting}, Ben.`;
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  document.getElementById('datechip').textContent = now.toLocaleDateString('fr-FR', opts);
+}
+updateDateTime();
+setInterval(updateDateTime, 60000);
+
+// ── Stockage ──
+const S = {
+  get: (k, def = null) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; } catch { return def; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del: (k) => { try { localStorage.removeItem(k); } catch {} }
+};
+
+function getCle()       { return S.get('mc_api_key', ''); }
+function getTodos()     { return S.get('mc_todos', []); }
+function getHistoire()  { return S.get('mc_historique', []); }
+function getQueue()     { return S.get('mc_queue', []); }
+function getMemoire()   { return S.get('mc_memoire', []); }
+
+// Construit le texte de contexte depuis la mémoire persistante
+function getContexteDepuisMemoire() {
+  const mem = getMemoire().filter(m => m.persistant);
+  if (!mem.length) return '';
+  return mem.map(m => m.contenu).join('\n');
+}
+
+// ── Navigation ──
+const TABS = ['brief','agenda','historique','chat','params'];
+
+function switchTab(tab) {
+  TABS.forEach(t => {
+    const sec = document.getElementById(`section${t.charAt(0).toUpperCase()+t.slice(1)}`);
+    const nav = document.getElementById(`nav-${t}`);
+    if (sec) sec.classList.toggle('active', t === tab);
+    if (nav) nav.classList.toggle('active', t === tab);
+  });
+  if (tab === 'historique') renderHistorique();
+  if (tab === 'agenda') rafraichirAgenda();
+  if (tab === 'chat') initChat();
+  if (tab === 'params') {
+    const cle = getCle();
+    if (cle) document.getElementById('inputApiKey').value = cle;
+  }
+}
+
+// ── Google token (déclaré ici car utilisé dans updateStatuts) ──
+const GOOGLE_CLIENT_ID = '468976687043-issgk3ifie6k35l747t5m3bvnmcie4sc.apps.googleusercontent.com';
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/drive';
+let _googleToken = null;
+let _tokenClient  = null;
+
+function getGoogleToken() {
+  if (_googleToken && _googleToken.expires_at > Date.now()) return _googleToken.access_token;
+  try {
+    const stored = JSON.parse(localStorage.getItem('mc_google_token') || 'null');
+    if (stored && stored.expires_at > Date.now()) { _googleToken = stored; return stored.access_token; }
+  } catch {}
+  return null;
+}
+
+// Refresh silencieux si token expiré ou expire dans < 5 min
+function refreshGoogleTokenSiNecessaire() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('mc_google_token') || 'null');
+    const expireBientot = stored && stored.expires_at < Date.now() + 5 * 60 * 1000;
+    if (!stored || expireBientot) {
+      if (!_tokenClient) {
+        _tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: GOOGLE_SCOPES,
+          prompt: '',
+          callback: (resp) => {
+            if (resp.error) return;
+            saveGoogleToken(resp.access_token, resp.expires_in);
+            updateStatuts();
+          }
+        });
+      }
+      _tokenClient.requestAccessToken({ prompt: '' });
+    }
+  } catch(e) { /* silencieux */ }
+}
+
+function saveGoogleToken(accessToken, expiresIn) {
+  const token = { access_token: accessToken, expires_at: Date.now() + (expiresIn - 60) * 1000 };
+  _googleToken = token;
+  localStorage.setItem('mc_google_token', JSON.stringify(token));
+}
+
+// ── Statuts ──
+function updateStatuts() {
+  const cle = getCle();
+  const elCle = document.getElementById('statusApiKey');
+
+  if (cle) {
+    elCle.textContent = 'Configurée ✓';
+    elCle.className = 'setting-value ok';
+  } else {
+    elCle.textContent = 'Non configurée';
+    elCle.className = 'setting-value ko';
+  }
+
+  const np = Notification.permission;
+  const elNotif = document.getElementById('statusNotif');
+  elNotif.textContent = np === 'granted' ? 'Autorisé ✓' : np === 'denied' ? 'Refusé' : 'Non autorisé';
+  elNotif.className = `setting-value ${np === 'granted' ? 'ok' : 'ko'}`;
+
+  // ── Statut Google ──
+  const googleToken  = getGoogleToken();
+  const googleEmail  = localStorage.getItem('mc_google_email') || '';
+  const elGoogle     = document.getElementById('statusGoogle');
+  const btnConnect   = document.getElementById('btnGoogleConnect');
+  const btnDisconnect = document.getElementById('btnGoogleDisconnect');
+  const emailDiv     = document.getElementById('googleUserEmail');
+
+  if (googleToken) {
+    elGoogle.textContent = 'Connecté ✓';
+    elGoogle.className = 'setting-value ok';
+    if (btnConnect)    btnConnect.style.display    = 'none';
+    if (btnDisconnect) btnDisconnect.style.display = 'block';
+    if (emailDiv && googleEmail) {
+      emailDiv.textContent = '✓ ' + googleEmail;
+      emailDiv.style.display = 'block';
+    }
+  } else {
+    elGoogle.textContent = 'Non connecté';
+    elGoogle.className = 'setting-value ko';
+    if (btnConnect)    btnConnect.style.display    = 'block';
+    if (btnDisconnect) btnDisconnect.style.display = 'none';
+    if (emailDiv)      emailDiv.style.display      = 'none';
+  }
+
+  const elBanner    = document.getElementById('setupBanner');
+  const elStatusRow = document.getElementById('statusRow');
+
+  if (cle && googleToken) {
+    elBanner.style.display = 'none';
+    elStatusRow.innerHTML = '<span class="badge ok"><span class="dot"></span>API prête</span><span class="badge ok"><span class="dot"></span>Google connecté</span>';
+  } else if (cle) {
+    elBanner.style.display = 'none';
+    elStatusRow.innerHTML = '<span class="badge ok"><span class="dot"></span>API prête</span><span class="badge warn"><span class="dot"></span>Google à connecter</span>';
+  } else {
+    elBanner.style.display = 'flex';
+    elStatusRow.innerHTML = '<span class="badge warn"><span class="dot"></span>Google non connecté</span><span class="badge warn"><span class="dot"></span>API non configurée</span>';
+  }
+
+  updateQueueUI();
+}
+updateStatuts();
+
+// ── Modèles ──
+const MODEL_SONNET = 'claude-sonnet-4-6';
+const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
+
+function getModelBrief() { return S.get('mc_model_brief', MODEL_SONNET); }
+function getModelChat()  { return S.get('mc_model_chat',  MODEL_SONNET); }
+
+function sauvegarderModele(type, val) {
+  S.set(type === 'brief' ? 'mc_model_brief' : 'mc_model_chat', val);
+  showToast(`Modèle ${type === 'brief' ? 'brief' : 'chat'} → ${val.includes('haiku') ? 'Haiku 4.5' : 'Sonnet 4.6'} ✓`);
+  if (type === 'chat') _chatContextLoaded = false; // forcer reload contexte
+}
+
+function initModelSelects() {
+  const sb = document.getElementById('selectModelBrief');
+  const sc = document.getElementById('selectModelChat');
+  if (sb) sb.value = getModelBrief();
+  if (sc) sc.value = getModelChat();
+}
+initModelSelects();
+
+// ── Clé API ──
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('inputApiKey');
+  const btn = document.getElementById('btnShowKey');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function sauvegarderCle() {
+  const val = document.getElementById('inputApiKey').value.trim();
+  if (!val.startsWith('sk-ant-')) { showToast('⚠ La clé doit commencer par sk-ant-'); return; }
+  S.set('mc_api_key', val);
+  updateStatuts();
+  showToast('Clé sauvegardée ✓');
+}
+
+// ── Notifications ──
+function demanderNotifications() {
+  Notification.requestPermission().then(p => {
+    updateStatuts();
+    showToast(p === 'granted' ? 'Notifications autorisées ✓' : 'Permission refusée');
+  });
+}
+
+// ── Mode de saisie ──
+function switchInputMode(mode) {
+  document.getElementById('modeVoice').style.display = mode === 'voice' ? 'block' : 'none';
+  document.getElementById('modeText').style.display  = mode === 'text'  ? 'block' : 'none';
+  document.getElementById('tabVoice').classList.toggle('active', mode === 'voice');
+  document.getElementById('tabText').classList.toggle('active',  mode === 'text');
+}
+
+function clearTextRappel() {
+  document.getElementById('textRappel').value = '';
+}
+
+// ────────────────────────────────────────────────
+// ── TODOLIST ──
+// ────────────────────────────────────────────────
+
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  const todos = getTodos();
+  const actifs = todos.filter(t => !t.done);
+  const faits = todos.filter(t => t.done);
+  const all = [...actifs, ...faits];
+
+  if (!all.length) {
+    list.innerHTML = '<div class="todo-empty">Aucune tâche pour le moment.</div>';
+    return;
+  }
+
+  list.innerHTML = all.map((t, i) => {
+    const realIdx = todos.indexOf(t);
+    return `
+      <div class="todo-item ${t.done ? 'done' : ''}" id="todo-${realIdx}">
+        <div class="todo-checkbox" onclick="toggleTodo(${realIdx})">${t.done ? '✓' : ''}</div>
+        ${t.time ? `<span class="todo-time">${t.time}</span>` : ''}
+        <span class="todo-label">${escHtml(t.text)}</span>
+        <button class="todo-del-btn" onclick="supprimerTodo(${realIdx})" title="Supprimer">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleTodo(idx) {
+  const todos = getTodos();
+  if (!todos[idx]) return;
+  todos[idx].done = !todos[idx].done;
+  todos[idx].doneAt = todos[idx].done ? new Date().toISOString() : null;
+  S.set('mc_todos', todos);
+  renderTodos();
+}
+
+function supprimerTodo(idx) {
+  const todos = getTodos();
+  todos.splice(idx, 1);
+  S.set('mc_todos', todos);
+  renderTodos();
+}
+
+function archiverTodosFaits() {
+  const todos = getTodos();
+  const faits = todos.filter(t => t.done);
+  if (!faits.length) { showToast('Aucune tâche complétée'); return; }
+
+  // Archiver dans historique
+  faits.forEach(t => {
+    ajouterHistorique('todo', `✓ ${t.text}${t.time ? ' (' + t.time + ')' : ''}`);
+  });
+
+  // Retirer de la liste active
+  const restants = todos.filter(t => !t.done);
+  S.set('mc_todos', restants);
+  renderTodos();
+  showToast(`${faits.length} tâche(s) archivée(s) ✓`);
+}
+
+// ────────────────────────────────────────────────
+// ── FILE D'ATTENTE LOCALE ──
+// Rappels saisis stockés sans appel API,
+// interprétés en lot à la sync (2x/jour ou manuelle)
+// ────────────────────────────────────────────────
+
+function updateQueueUI() {
+  const queue = getQueue();
+  const lastSync = S.get('mc_last_sync', null);
+  const nextSync = prochaineSyncHeure();
+
+  const queueCountEl = document.getElementById('queueCount');
+  const lastSyncEl = document.getElementById('lastSyncInfo');
+  const syncInfoEl = document.getElementById('syncInfo');
+  const btnSync = document.getElementById('btnSyncQueue');
+  const queueInfoEl = document.getElementById('queueInfo');
+  const queuePendingEl = document.getElementById('queuePendingInfo');
+
+  if (queue.length > 0) {
+    if (syncInfoEl) {
+      syncInfoEl.style.display = 'flex';
+      if (queueCountEl) queueCountEl.textContent = `${queue.length} en attente`;
+      if (lastSyncEl) lastSyncEl.textContent = `— prochaine sync ${nextSync}`;
+    }
+    if (btnSync) btnSync.style.display = 'block';
+    if (queueInfoEl) {
+      queueInfoEl.style.display = 'block';
+      if (queuePendingEl) queuePendingEl.textContent = `${queue.length} élément(s) en attente`;
+    }
+  } else {
+    if (syncInfoEl) syncInfoEl.style.display = 'none';
+    if (btnSync) btnSync.style.display = 'none';
+    if (queueInfoEl) queueInfoEl.style.display = 'none';
+    if (lastSync && lastSyncEl) {
+      const dt = new Date(lastSync);
+      if (lastSyncEl) lastSyncEl.textContent = `Dernière sync : ${dt.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}`;
+      if (syncInfoEl) syncInfoEl.style.display = 'flex';
+    }
+  }
+}
+
+function prochaineSyncHeure() {
+  const now = new Date();
+  const h = now.getHours();
+  // Syncs planifiées : 7h et 19h
+  if (h < 7) return 'à 7h00';
+  if (h < 19) return 'à 19h00';
+  return 'demain à 7h00';
+}
+
+// Ajouter à la file sans appel API
+function ajouterAFile(texte) {
+  const queue = getQueue();
+  queue.push({ texte, addedAt: new Date().toISOString() });
+  S.set('mc_queue', queue);
+  updateQueueUI();
+  showToast(`Ajouté à la file (${queue.length} en attente)`);
+}
+
+// Synchroniser la file : 1 seul appel Claude pour tous les éléments
+async function syncerFile() {
+  const cle = getCle();
+  if (!cle) { showToast('⚠ Configure ta clé API d\'abord'); switchTab('params'); return; }
+
+  const queue = getQueue();
+  if (!queue.length) { showToast('File vide, rien à synchroniser'); return; }
+
+  const btn = document.getElementById('btnSyncQueue');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+  try {
+    const listeTexte = queue.map((q, i) => `${i+1}. "${q.texte}"`).join('\n');
+
+    const res = await fetch('https://mentalcharge-proxy.benjamin-frossard.workers.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cle,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-allowance': 'my-public-webui'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: 'Tu extrais des rappels/tâches depuis une liste de textes. Réponds UNIQUEMENT en JSON : un tableau d\'objets avec les champs {"text": "libellé court", "time": "HH:MM ou date courte ou null", "type": "rappel ou todo"}. Pas de markdown, pas d\'explication.',
+        messages: [{ role: 'user', content: `Extrais chaque élément de cette liste :\n${listeTexte}` }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '[]';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    const todos = getTodos();
+    let ajoutés = 0;
+
+    parsed.forEach(item => {
+      const entry = {
+        text: item.text || '(sans titre)',
+        time: item.time || null,
+        done: false,
+        createdAt: new Date().toISOString()
+      };
+      todos.push(entry);
+      ajouterHistorique('rappel', entry.text);
+      ajoutés++;
+    });
+
+    S.set('mc_todos', todos);
+    S.del('mc_queue');
+    S.set('mc_last_sync', new Date().toISOString());
+
+    renderTodos();
+    updateQueueUI();
+    showToast(`${ajoutés} élément(s) synchronisé(s) ✓`);
+
+  } catch(err) {
+    showToast('Erreur sync : ' + err.message);
+  } finally {
+    if (btn) { btn.textContent = '↺ Sync'; btn.disabled = false; }
+  }
+}
+
+// Vérifier si une sync auto est due (2x/jour : 7h et 19h)
+function verifierSyncAuto() {
+  const queue = getQueue();
+  if (!queue.length) return;
+
+  const lastSync = S.get('mc_last_sync', null);
+  const now = new Date();
+  const h = now.getHours();
+
+  // Fenêtres de sync : 7h-8h et 19h-20h
+  const dansFenetre = (h >= 7 && h < 8) || (h >= 19 && h < 20);
+  if (!dansFenetre) return;
+
+  if (lastSync) {
+    const derniere = new Date(lastSync);
+    const diffH = (now - derniere) / 3600000;
+    if (diffH < 6) return; // éviter double sync
+  }
+
+  const cle = getCle();
+  if (cle) {
+    showToast('🔄 Sync automatique…');
+    syncerFile();
+  }
+}
+
+// ────────────────────────────────────────────────
+// ── SAISIE DE RAPPEL / TÂCHE ──
+// Mode direct (avec clé) ou file d'attente (sans)
+// ────────────────────────────────────────────────
+
+async function validerRappel(mode) {
+  let texte = '';
+  if (mode === 'text') {
+    texte = document.getElementById('textRappel').value.trim();
+  } else {
+    texte = document.getElementById('voiceTranscript').textContent.trim();
+  }
+
+  if (!texte) { showToast('⚠ Rien à enregistrer'); return; }
+
+  const cle = getCle();
+
+  // Si pas de clé → file d'attente directe
+  if (!cle) {
+    ajouterAFile(texte);
+    if (mode === 'text') {
+      document.getElementById('textRappel').value = '';
+    } else {
+      document.getElementById('voiceTranscript').style.display = 'none';
+      document.getElementById('btnValidateVoice').style.display = 'none';
+    }
+    return;
+  }
+
+  // Avec clé → interprétation immédiate
+  showToast('⏳ Claude interprète…');
+
+  try {
+    const res = await fetch('https://mentalcharge-proxy.benjamin-frossard.workers.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cle,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-allowance': 'my-public-webui'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system: `Tu analyses une saisie de l'utilisateur et tu réponds UNIQUEMENT en JSON :
+{"taches": [{"text": "libellé court", "time": "HH:MM ou null"}], "memoire": [{"contenu": "UN SEUL fait atomique sur Ben", "persistant": true/false}]}
+- "taches" : tableau de TOUTES les tâches/rappels détectés (1 objet par tâche, même s'il y en a plusieurs).
+- "memoire" : UN fait atomique par entrée. Sépare personnes (qui elles sont) des événements/actions. Ex: "Claire est une personne importante pour Ben" ET "Ben doit acheter un cadeau à Claire" (2 entrées séparées). Vide [] si rien de durable.
+Pas de markdown.`,
+        messages: [{ role: 'user', content: `Analyse : "${texte}"` }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '{}';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    // Proposer les tâches pour édition avant ajout (pas de save immédiat)
+    const taches = parsed.taches || (parsed.tache ? [parsed.tache] : [{ text: texte, time: null }]);
+    afficherSuggestionsRappel(taches);
+
+    // Proposer la mémoire si détectée
+    if (parsed.memoire && parsed.memoire.length > 0) {
+      parsed.memoire.forEach(m => m.source = 'saisie');
+      renderMemoireValidation(parsed.memoire);
+    }
+
+    if (mode === 'text') {
+      document.getElementById('textRappel').value = '';
+    } else {
+      document.getElementById('voiceTranscript').style.display = 'none';
+      document.getElementById('btnValidateVoice').style.display = 'none';
+    }
+
+    renderTodos();
+    showToast('Tâche(s) détectée(s) — confirme ci-dessous ✓');
+  } catch(err) {
+    // Fallback file d'attente si erreur API
+    ajouterAFile(texte);
+    showToast('API indisponible — mis en file d\'attente');
+  }
+}
+
+// ────────────────────────────────────────────────
+// ── DICTÉE VOCALE ──
+// ────────────────────────────────────────────────
+let recognition = null;
+let recording = false;
+
+function toggleVoice() {
+  const btn = document.getElementById('voiceBtn');
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    showToast('⚠ Dictée non supportée sur ce navigateur');
+    return;
+  }
+
+  if (!recording) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'fr-FR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      const el = document.getElementById('voiceTranscript');
+      el.textContent = transcript;
+      el.style.display = 'block';
+      document.getElementById('btnValidateVoice').style.display = 'flex';
+    };
+
+    recognition.onerror = (e) => { showToast('Erreur micro : ' + e.error); };
+    recognition.onend = () => {
+      btn.textContent = '🎙 Appuyer pour dicter';
+      btn.classList.remove('recording');
+      recording = false;
+    };
+
+    recognition.start();
+    btn.textContent = '⏹ Enregistrement… (appuyer pour arrêter)';
+    btn.classList.add('recording');
+    recording = true;
+  } else {
+    recognition.stop();
+  }
+}
+
+// ────────────────────────────────────────────────
+// ────────────────────────────────────────────────
+// ── MÉTÉO (Open-Meteo, sans clé API) ──
+// ────────────────────────────────────────────────
+
+const METEO_CODES = {
+  0:'Ciel dégagé', 1:'Principalement dégagé', 2:'Partiellement nuageux', 3:'Couvert',
+  45:'Brouillard', 48:'Brouillard givrant',
+  51:'Bruine légère', 53:'Bruine modérée', 55:'Bruine dense',
+  61:'Pluie légère', 63:'Pluie modérée', 65:'Pluie forte',
+  71:'Neige légère', 73:'Neige modérée', 75:'Neige forte',
+  80:'Averses légères', 81:'Averses modérées', 82:'Averses violentes',
+  95:'Orage', 96:'Orage avec grêle', 99:'Orage violent'
+};
+
+const METEO_ICONS = {
+  0:'☀️', 1:'🌤', 2:'⛅', 3:'☁️',
+  45:'🌫', 48:'🌫',
+  51:'🌦', 53:'🌦', 55:'🌧',
+  61:'🌧', 63:'🌧', 65:'🌧',
+  71:'🌨', 73:'🌨', 75:'🌨',
+  80:'🌦', 81:'🌧', 82:'⛈',
+  95:'⛈', 96:'⛈', 99:'⛈'
+};
+
+let _meteoData = null; // Cache pour injecter dans le prompt
+
+async function chargerMeteo() {
+  try {
+    // Paris par défaut — sera remplacé par geolocation si dispo
+    let lat = 48.8566, lon = 2.3522, ville = 'Paris';
+
+    if ('geolocation' in navigator) {
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 })
+        );
+        lat = pos.coords.latitude.toFixed(4);
+        lon = pos.coords.longitude.toFixed(4);
+        ville = '';
+      } catch { /* Utilise Paris */ }
+    }
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FParis&forecast_days=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const temp = Math.round(data.current.temperature_2m);
+    const code = data.current.weathercode;
+    const tempMax = Math.round(data.daily.temperature_2m_max[0]);
+    const tempMin = Math.round(data.daily.temperature_2m_min[0]);
+    const precipProb = data.daily.precipitation_probability_max[0];
+    const desc = METEO_CODES[code] || 'Conditions variables';
+    const icon = METEO_ICONS[code] || '🌡';
+
+    _meteoData = { temp, tempMax, tempMin, code, desc, icon, precipProb, ville };
+
+    // Afficher le widget météo
+    document.getElementById('meteoIcon').textContent = icon;
+    document.getElementById('meteoTemp').textContent = `${temp}°C`;
+    const descEl = document.getElementById('meteoDesc');
+    descEl.textContent = `${desc} · ${tempMin}–${tempMax}°C${precipProb > 30 ? ` · 💧${precipProb}%` : ''}`;
+    document.getElementById('meteoStrip').style.display = 'flex';
+
+  } catch { /* Silencieux si pas de réseau */ }
+}
+
+// ────────────────────────────────────────────────
+// ── MÉMOIRE ──
+// ────────────────────────────────────────────────
+
+let _memoireEnCours = []; // items en attente de validation
+
+function renderMemoireValidation(items) {
+  _memoireEnCours = items.map((item, i) => ({ ...item, idx: i, ignored: false }));
+  const container = document.getElementById('memoireItems');
+
+  container.innerHTML = _memoireEnCours.map((item, i) => `
+    <div class="memoire-item-preview" id="mem-item-${i}">
+      <div style="margin-bottom:8px;">
+        <textarea id="mem-text-${i}"
+          style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:Inter,sans-serif;font-size:13px;color:var(--text);outline:none;resize:none;min-height:44px;line-height:1.4;display:block;"
+          onfocus="this.style.borderColor='var(--accent)'"
+          onblur="this.style.borderColor='var(--border)'"
+          oninput="_memoireEnCours[${i}].contenu=this.value"
+        >${escHtml(item.contenu)}</textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="toggle-persistant ${item.persistant ? 'on' : ''}" id="mem-toggle-${i}"
+          onclick="toggleMemoirePersistant(${i})">
+          ${item.persistant ? '📌 Persistant' : '⏱ Temporaire'}
+        </button>
+        <div style="flex:1;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="ignorerMemoireItem(${i})" style="padding:5px 12px;font-size:12px;">Ignorer</button>
+        <button class="btn btn-primary btn-sm" onclick="memoriserItem(${i})" style="margin-top:0;padding:5px 12px;font-size:12px;">Mémoriser</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Masquer les boutons globaux — chaque item a ses propres boutons
+  const globalActions = document.querySelector('#memoireValidation .btn-row');
+  if (globalActions) globalActions.style.display = 'none';
+
+  document.getElementById('memoireValidation').style.display = 'block';
+}
+
+function ignorerMemoireItem(i) {
+  const el = document.getElementById(`mem-item-${i}`);
+  if (el) {
+    el.style.transition = 'opacity 0.2s, max-height 0.3s';
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.display = 'none'; }, 200);
+  }
+  _memoireEnCours[i].ignored = true;
+  // Si tous ignorés → cacher le bloc
+  if (_memoireEnCours.every(m => m.ignored)) {
+    document.getElementById('memoireValidation').style.display = 'none';
+    _memoireEnCours = [];
+  }
+}
+
+function memoriserItem(i) {
+  const ta = document.getElementById(`mem-text-${i}`);
+  if (ta) _memoireEnCours[i].contenu = ta.value.trim();
+  if (!_memoireEnCours[i].contenu) { ignorerMemoireItem(i); return; }
+
+  const mem = getMemoire();
+  mem.push({
+    id: Date.now() + Math.random(),
+    contenu: _memoireEnCours[i].contenu,
+    persistant: _memoireEnCours[i].persistant,
+    date: new Date().toISOString(),
+    source: _memoireEnCours[i].source || 'brief'
+  });
+  const limite = Date.now() - 60 * 24 * 3600 * 1000;
+  S.set('mc_memoire', mem.filter(m => m.persistant || new Date(m.date).getTime() > limite));
+  showToast('Mémorisé ✓');
+
+  // Sync Drive en arrière-plan
+  const token = getGoogleToken();
+  if (token) driveSauvegarderMemoire(token, [_memoireEnCours[i]]).catch(() => {});
+
+  ignorerMemoireItem(i);
+}
+
+function toggleMemoirePersistant(i) {
+  _memoireEnCours[i].persistant = !_memoireEnCours[i].persistant;
+  const toggle = document.getElementById(`mem-toggle-${i}`);
+  if (toggle) {
+    toggle.className = `toggle-persistant ${_memoireEnCours[i].persistant ? 'on' : ''}`;
+    toggle.textContent = _memoireEnCours[i].persistant ? '📌 Persistant' : '⏱ Temporaire';
+  }
+}
+
+// Extrait la mémoire depuis une réponse Claude (bloc <MEMOIRE>)
+function traiterBlocMemoire(raw) {
+  const match = raw.match(/<MEMOIRE>([\s\S]*?)<\/MEMOIRE>/);
+  if (!match) return;
+  try {
+    const items = JSON.parse(match[1].trim());
+    if (items.length > 0) renderMemoireValidation(items);
+  } catch { /* JSON malformé */ }
+}
+
+// ── Rendu markdown minimal ──
+function renderMarkdown(text) {
+  return text
+    // Titres ## et ###
+    .replace(/^### (.+)$/gm, '<h4 style="font-size:13px;font-weight:600;margin:10px 0 4px;color:var(--text);">$1</h4>')
+    .replace(/^## (.+)$/gm,  '<h3 style="font-size:14px;font-weight:600;margin:12px 0 5px;color:var(--text);">$1</h3>')
+    // Gras **text**
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Italique *text*
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Listes - item
+    .replace(/^- (.+)$/gm, '<li style="margin:3px 0 3px 14px;list-style:disc;">$1</li>')
+    // Wraper les <li> consécutifs dans un <ul>
+    .replace(/(<li[^>]*>.*<\/li>\n?)+/g, m => `<ul style="margin:6px 0;">${m}</ul>`)
+    // Sauts de ligne
+    .replace(/\n{2,}/g, '</p><p style="margin-top:8px;">')
+    .replace(/\n/g, '<br>')
+    // Wrapper global
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+// ── BRIEF MATINAL / DU SOIR ──
+// ────────────────────────────────────────────────
+
+function estBriefDuSoir() {
+  const h = new Date().getHours();
+  return h >= 17; // À partir de 17h → brief du soir
+}
+
+function configurerBriefUI() {
+  const soir = estBriefDuSoir();
+  const card = document.getElementById('briefCard');
+  const label = document.getElementById('briefLabel');
+  const btn = document.getElementById('btnBrief');
+
+  if (soir) {
+    card.classList.remove('brief-card');
+    card.classList.add('brief-card', 'brief-card-soir');
+    if (label) label.textContent = 'Brief du soir';
+    if (btn && btn.textContent.includes('Générer')) btn.textContent = '🌙 Générer le brief du soir';
+  } else {
+    if (label) label.textContent = 'Brief matinal';
+    if (btn && btn.textContent.includes('Générer')) btn.textContent = '✦ Générer le brief';
+  }
+}
+
+async function genererBrief() {
+  const cle = getCle();
+  if (!cle) { showToast('⚠ Configure ta clé API d\'abord'); switchTab('params'); return; }
+
+  const btn = document.getElementById('btnBrief');
+  btn.textContent = '⏳ Génération en cours…';
+  btn.disabled = true;
+
+  // Cacher les suggestions précédentes
+  document.getElementById('briefSuggestions').style.display = 'none';
+
+  // Afficher skeleton
+  document.getElementById('briefPlaceholder').style.display = 'none';
+  document.getElementById('briefContent').style.display = 'none';
+  document.getElementById('briefSkeleton').style.display = 'block';
+
+  const contexte = getContexteDepuisMemoire();
+  const todos = getTodos().filter(t => !t.done);
+  const soir = estBriefDuSoir();
+  const todosTexte = todos.length
+    ? todos.map(t => (t.time ? t.time + ' — ' : '') + t.text).join(', ')
+    : '';
+
+  // ── Chargement mémoire Drive si connecté ──
+  let contexteDrive = contexte;
+  let episodicTexte = '';
+  const googleTokenMem = getGoogleToken();
+  if (googleTokenMem) {
+    try {
+      btn.textContent = '⏳ Chargement mémoire…';
+      const { contexte: ctxDrive, episodic } = await driveChargerMemoire(googleTokenMem);
+      if (ctxDrive) contexteDrive = ctxDrive;
+      if (episodic.length) {
+        episodicTexte = episodic.map(e => `- ${e.contenu}`).join('\n');
+      }
+    } catch(e) { /* fallback localStorage */ }
+  }
+
+  // Données météo
+  const meteoTexte = _meteoData
+    ? `Météo du jour : ${_meteoData.icon} ${_meteoData.temp}°C, ${_meteoData.desc}, min ${_meteoData.tempMin}°C / max ${_meteoData.tempMax}°C${_meteoData.precipProb > 30 ? `, risque pluie ${_meteoData.precipProb}%` : ''}.`
+    : '';
+
+  // ── Données Google (Gmail + Calendar + SMS) si connecté ──
+  let gmailTexte = '';
+  let calendarTexte = '';
+  let smsTexte = '';
+  let googleDataOk = false;
+  const googleToken = getGoogleToken();
+  if (!googleToken) {
+    showToast('⚠ Google non connecté — brief sans emails ni agenda', 4000);
+  } else {
+    try {
+      btn.textContent = '⏳ Récupération agenda, emails et SMS…';
+      const [calResult, gmailR, smsR] = await Promise.all([
+        fetchCalendar(googleToken, 30),
+        fetchGmail(googleToken),
+        fetchSMS(googleToken)
+      ]);
+      calendarTexte = calResult.prompt || '';
+      gmailTexte = gmailR;
+      smsTexte = smsR;
+      googleDataOk = true;
+    } catch(e) {
+      showToast('⚠ Données Google non récupérées — reconnecte Google', 4000);
+    }
+    btn.textContent = '⏳ Génération du brief…';
+  }
+
+  // ── Déduplication : todos actifs + historique récent (pour injection sémantique dans prompt) ──
+  const todosActifs = getTodos().filter(t => !t.done).map(t => t.text);
+  const historiqueRecent = getHistoire().slice(0, 40)
+    .map(h => h.contenu || '')
+    .filter(Boolean)
+    .slice(0, 25); // les 25 plus récents suffisent
+
+  const dejaCouvertTexte = [
+    ...todosActifs.map(t => `- ${t}`),
+    ...historiqueRecent.map(t => `- ${t}`)
+  ].join('\n') || '(aucun)';
+
+  // Filtre JS léger : correspondance exacte uniquement (les fuzzy sont gérés par Claude)
+  const dejaCouvertExact = [...todosActifs, ...historiqueRecent].map(t => t.toLowerCase().trim());
+
+  // Prompt système
+  const now2 = new Date();
+  const dateStr = now2.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const heureStr = now2.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  const promptProactif = soir ? '' : `
+
+═══════════════════════════════════════
+RAISONNEMENT PROACTIF — INSTRUCTIONS
+═══════════════════════════════════════
+
+Après le brief, produis un bloc <PROACTIF> contenant une analyse structurée sur les 5 domaines ci-dessous.
+Tu dois RAISONNER activement : croiser les emails, l'agenda, les SMS, la mémoire, et la date du jour pour détecter ce qui mérite l'attention de Ben — même s'il n'en a pas parlé.
+
+FORMAT de chaque item (JSON strict) :
+{"urgence":"🔴|🟡|🔵","domaine":"PRO|VOYAGE|FAMILLE|MAISON|SOCIAL","texte":"titre court et actionnable","detail":"explication 1-2 phrases max","tache":{"text":"libellé tâche courte","time":"HH:MM ou null"} ou null}
+
+NIVEAUX D'URGENCE :
+🔴 Critique — délai imminent (aujourd'hui/demain), conséquence si inaction
+🟡 À surveiller — dans les 3-7 jours, à anticiper
+🔵 Info — signal faible, à garder en tête
+
+DOMAINE PRO — cherche activement :
+- Emails sans réponse depuis >3 jours (surtout confrères, patients avec initiales seulement, administration)
+- Réunions ou RDV sans confirmation reçue
+- Délais administratifs approchant (URSSAF, CPAM, ARS, DPC annuel)
+- Contrats ou devis en attente de décision
+- Résultats ou comptes-rendus reçus sans action planifiée
+RÈGLE MÉDICALE : pour les patients, utilise uniquement les initiales (ex: "M. T."), ne lis pas les pièces jointes, ne mémorise aucune donnée patient.
+
+DOMAINE VOYAGE — cherche activement :
+- Voyage confirmé sans transport aller/retour réservé
+- Vol détecté sans transfert aéroport
+- Hébergement sans activités réservées (voyage famille avec enfants)
+- Documents de voyage expirant dans <6 mois
+- Location voiture sans vérification assurance CB
+
+DOMAINE FAMILLE — cherche activement :
+- Anniversaires dans les 7 prochains jours (croise avec la mémoire)
+- Événements scolaires sans réponse/préparation (autorisation, fournitures, paiement)
+- Vaccins pédiatriques en retard (si info dispo en mémoire)
+- Activités extrascolaires à inscrire (rentrée approchante)
+- Réunions parents-profs sans confirmation
+
+DOMAINE MAISON/FINANCES/SANTÉ — cherche activement :
+- Contrôle technique ou révision véhicule approchant
+- Assurances annuelles à renouveler
+- Prélèvements inhabituels détectés dans les emails
+- RDV annuel dentiste/ophtalmo si >12 mois (si info dispo en mémoire)
+- Prescriptions non retirées ou à renouveler
+
+DOMAINE SOCIAL/ADMIN — cherche activement :
+- Ami non contacté depuis longtemps (si info dispo en mémoire)
+- Invitation sans réponse détectée dans les emails/SMS
+- CB/Passeport/CNI expirant dans <3 mois (si info dispo en mémoire)
+- Abonnements annuels à renouveler (J-30)
+
+RÈGLES IMPORTANTES :
+- Ne propose QUE ce que tu as réellement détecté dans les données. Pas de suggestions génériques.
+- Si un domaine n'a rien de notable : n'inclus aucun item pour ce domaine.
+- Maximum 6 items au total, priorisés par urgence.
+- Les items 🔴 en premier, puis 🟡, puis 🔵.
+- Si aucun item détecté dans aucun domaine : <PROACTIF>[]</PROACTIF>`;
+
+  const sysPrompt = `Tu es l'assistant personnel de Ben, anesthésiste-réanimateur en chirurgie cardiaque à Paris.${contexteDrive ? '\n\nCe que tu sais sur Ben (profil long terme) :\n' + contexteDrive : ''}${episodicTexte ? '\n\nMémoire récente :\n' + episodicTexte : ''}
+
+Nous sommes le ${dateStr} à ${heureStr}.
+${meteoTexte ? meteoTexte : ''}
+${calendarTexte ? '\nAgenda :\n' + calendarTexte : ''}
+${gmailTexte ? '\nEmails reçus dans les dernières 48h (lus et non lus) :\n' + gmailTexte : ''}
+${smsTexte ? '\nSMS reçus dans les dernières 48h :\n' + smsTexte : ''}
+${!googleDataOk ? '\n⚠ IMPORTANT : les données Gmail, Calendar et SMS ne sont PAS disponibles pour ce brief. Ne mentionne PAS d\'emails, d\'événements agenda ou de SMS. Ne fais aucune supposition sur l\'emploi du temps ou les messages reçus. Base-toi uniquement sur ce qui est explicitement fourni ci-dessus.' : ''}
+${soir
+  ? `\nGénère un brief du SOIR bref et structuré :
+1. Bilan rapide de la journée (1-2 phrases)
+2. Ce qui reste à faire ce soir
+3. Agenda du lendemain (points clés)
+4. Rappels importants pour demain`
+  : `\nGénère un brief MATINAL concis et structuré (maximum 300 mots pour le texte du brief) :
+1. Bonjour + date + météo en 1 ligne
+2. Points clés de la journée (3-5 items max)
+3. Emails importants à traiter (2-3 max)
+4. Rappels du jour (2-3 max)`
+}
+${todosTexte ? `\nTâches en cours : ${todosTexte}` : ''}
+${promptProactif}
+
+IMPORTANT : ta réponse doit contenir ces blocs :
+
+1. Le brief en texte naturel (markdown simple : **gras**, listes -, titres ##).
+
+2. <TACHES>[...]</TACHES> — tâches NOUVELLES et NON ENCORE TRAITÉES détectées dans les données.
+RÈGLE CRITIQUE : ne propose PAS une tâche si elle correspond sémantiquement à quelque chose déjà fait ou en cours ci-dessous (même formulé différemment — ex: "répondre email X" si X est déjà dans la liste, ou si un email de X figure dans l'historique comme traité).
+Éléments déjà couverts (todos actifs + actions récentes archivées) :
+${dejaCouvertTexte}
+Format : [{"text":"...","time":"HH:MM ou null"}]. Si aucune nouvelle tâche : [].
+
+3. <MEMOIRE>[...]</MEMOIRE> — nouvelles infos durables sur Ben (anniversaires, personnes, préférences). JAMAIS de données patients. Format : [{"contenu":"...","persistant":true/false}]. Si aucune : [].
+${soir ? '' : '\n4. <PROACTIF>[...]</PROACTIF> — résultat du raisonnement proactif. Voir instructions ci-dessus.'}
+
+Pas de markdown dans les JSON.`;
+
+  try {
+    const res = await fetch('https://mentalcharge-proxy.benjamin-frossard.workers.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cle,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-allowance': 'my-public-webui'
+      },
+      body: JSON.stringify({
+        model: getModelBrief(),
+        max_tokens: 4096,
+        system: sysPrompt,
+        messages: [{ role: 'user', content: soir ? 'Génère mon brief du soir.' : 'Génère mon brief matinal.' }]
+      })
+    });
+
+    const data = await res.json();
+    if (!data.content?.[0]?.text) throw new Error(data.error?.message || 'Réponse inattendue');
+
+    const raw = data.content[0].text;
+
+    // ── Séparer brief, TACHES, MEMOIRE et PROACTIF ──
+    const tachesMatch = raw.match(/<TACHES>([\s\S]*?)<\/TACHES>/);
+    const proactifMatch = raw.match(/<PROACTIF>([\s\S]*?)<\/PROACTIF>/);
+    const briefTexte = raw
+      .replace(/<TACHES>[\s\S]*?<\/TACHES>/, '')
+      .replace(/<MEMOIRE>[\s\S]*?<\/MEMOIRE>/, '')
+      .replace(/<PROACTIF>[\s\S]*?<\/PROACTIF>/, '')
+      .trim();
+
+    // Afficher le brief avec rendu markdown minimal
+    const el = document.getElementById('briefContent');
+    el.innerHTML = renderMarkdown(briefTexte);
+    el.style.display = 'block';
+    document.getElementById('briefSkeleton').style.display = 'none';
+    document.getElementById('briefPlaceholder').style.display = 'none';
+
+    const now = new Date();
+    const typeLabel = soir ? 'Brief du soir' : 'Brief matinal';
+    const meta = document.getElementById('briefMeta');
+    meta.textContent = `${typeLabel} — ${now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })} à ${now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })}`;
+    meta.style.display = 'block';
+    document.getElementById('briefTitle').textContent = `${typeLabel} du ${now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}`;
+
+    ajouterHistorique('brief', briefTexte);
+
+    // ── Sauvegarder en cache offline ──
+    S.set('mc_last_brief_cache', JSON.stringify({
+      html: renderMarkdown(briefTexte),
+      meta: `${typeLabel} — ${now.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })} à ${now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })} (hors ligne possible)`,
+      savedAt: now.toISOString()
+    }));
+
+    // ── Suggestions de tâches (filtre JS exact en backup — la dédup sémantique est dans le prompt) ──
+    if (tachesMatch) {
+      try {
+        let taches = JSON.parse(tachesMatch[1].trim());
+        if (taches.length > 0) {
+          // Filtre de sécurité : correspondance exacte uniquement
+          taches = taches.filter(t => {
+            const texte = (t.text || '').toLowerCase().trim();
+            return !dejaCouvertExact.some(ex => ex === texte);
+          });
+          if (taches.length > 0) afficherSuggestions(taches);
+        }
+      } catch { }
+    }
+
+    // ── Raisonnement proactif ──
+    if (proactifMatch && !soir) {
+      try {
+        const items = JSON.parse(proactifMatch[1].trim());
+        if (items.length > 0) afficherProactif(items);
+        else masquerProactif();
+      } catch { masquerProactif(); }
+    } else {
+      masquerProactif();
+    }
+
+    // ── Suggestions mémoire ──
+    traiterBlocMemoire(raw);
+
+  } catch(err) {
+    document.getElementById('briefSkeleton').style.display = 'none';
+
+    // Tentative d'affichage du cache offline
+    const cache = S.get('mc_last_brief_cache', null);
+    if (cache) {
+      try {
+        const c = JSON.parse(cache);
+        const el = document.getElementById('briefContent');
+        el.innerHTML = c.html;
+        el.style.display = 'block';
+        document.getElementById('briefPlaceholder').style.display = 'none';
+        const meta = document.getElementById('briefMeta');
+        meta.textContent = '⚠ Hors ligne — ' + c.meta;
+        meta.style.display = 'block';
+        showToast('Hors ligne — brief précédent affiché');
+        return;
+      } catch {}
+    }
+
+    document.getElementById('briefPlaceholder').style.display = 'block';
+    document.getElementById('briefPlaceholder').innerHTML =
+      `<strong style="color:var(--danger);">⚠ Impossible de joindre le serveur</strong><br>
+       Vérifie ta connexion ou <a href="#" onclick="genererBrief();return false;" style="color:var(--accent);">réessaie</a>.<br>
+       <span style="font-size:12px;color:var(--text-dim);">${err.message}</span>`;
+    showToast('Erreur réseau — réessaie dans un instant');
+  } finally {
+    btn.textContent = '↺ Actualiser';
+    btn.disabled = false;
+  }
+}
+
+// ── Raisonnement proactif ──
+let _proactifItems = [];
+
+function masquerProactif() {
+  document.getElementById('proactifCard').style.display = 'none';
+  _proactifItems = [];
+}
+
+function afficherProactif(items) {
+  _proactifItems = items;
+  const card = document.getElementById('proactifCard');
+  const list = document.getElementById('proactifList');
+  const meta = document.getElementById('proactifMeta');
+
+  const nb = items.length;
+  const nbRouge = items.filter(i => i.urgence === '🔴').length;
+  meta.textContent = `${nb} point${nb > 1 ? 's' : ''}${nbRouge > 0 ? ` · ${nbRouge} urgent${nbRouge > 1 ? 's' : ''}` : ''}`;
+
+  list.innerHTML = items.map((item, i) => `
+    <div class="proactif-item" id="proactif-${i}">
+      <div class="proactif-urgence">${item.urgence || '🔵'}</div>
+      <div class="proactif-body">
+        <div class="proactif-domaine">${item.domaine || ''}</div>
+        <div class="proactif-texte">${escHtml(item.texte || '')}</div>
+        ${item.detail ? `<div class="proactif-detail">${escHtml(item.detail)}</div>` : ''}
+        ${item.tache ? `
+        <div class="proactif-actions">
+          <button class="btn btn-ghost btn-sm" onclick="ignorerProactif(${i})" style="padding:4px 10px;font-size:12px;">Ignorer</button>
+          <button class="btn btn-primary btn-sm" onclick="memoriserProactif(${i})" style="margin-top:0;padding:4px 10px;font-size:12px;">Ajouter tâche</button>
+        </div>` : `
+        <div class="proactif-actions">
+          <button class="btn btn-ghost btn-sm" onclick="ignorerProactif(${i})" style="padding:4px 10px;font-size:12px;">Ignorer</button>
+        </div>`}
+      </div>
+    </div>
+  `).join('');
+
+  card.style.display = 'block';
+}
+
+function ignorerProactif(i) {
+  const el = document.getElementById(`proactif-${i}`);
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; setTimeout(() => el.remove(), 200); }
+  _proactifItems[i] = null;
+  if (_proactifItems.every(it => !it)) masquerProactif();
+  else {
+    const restants = _proactifItems.filter(Boolean).length;
+    const meta = document.getElementById('proactifMeta');
+    if (meta) meta.textContent = `${restants} point${restants > 1 ? 's' : ''}`;
+  }
+}
+
+function memoriserProactif(i) {
+  const item = _proactifItems[i];
+  if (!item || !item.tache) { ignorerProactif(i); return; }
+  const todos = getTodos();
+  todos.push({ text: item.tache.text, time: item.tache.time || null, done: false, createdAt: new Date().toISOString() });
+  ajouterHistorique('rappel', item.tache.text);
+  S.set('mc_todos', todos);
+  renderTodos();
+  showToast('Tâche ajoutée ✓');
+  ignorerProactif(i);
+}
+
+// ── Suggestions depuis saisie rappel (éditables) ──
+let _suggestionsRappelEnCours = [];
+
+function afficherSuggestionsRappel(taches) {
+  _suggestionsRappelEnCours = taches.map(t => ({ ...t }));
+  const container = document.getElementById('suggestionsRappelContainer');
+  if (!container) return;
+
+  container.innerHTML = _suggestionsRappelEnCours.map((t, i) => `
+    <div id="srappel-${i}" style="background:var(--surface);border:1px solid #C6F6D5;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <input type="text" value="${escHtml(t.text)}" id="srappel-text-${i}"
+          style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:Inter,sans-serif;font-size:13px;color:var(--text);outline:none;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+          oninput="_suggestionsRappelEnCours[${i}].text=this.value" />
+        <input type="text" value="${t.time || ''}" id="srappel-time-${i}" placeholder="heure"
+          style="width:64px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-family:Inter,sans-serif;font-size:12px;color:var(--accent);font-weight:600;outline:none;text-align:center;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+          oninput="_suggestionsRappelEnCours[${i}].time=this.value||null" />
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="ignorerSuggestionRappel(${i})" style="flex:1;padding:5px 10px;font-size:12px;">Ignorer</button>
+        <button class="btn btn-primary btn-sm" onclick="memoriserSuggestionRappel(${i})" style="flex:1;margin-top:0;padding:5px 10px;font-size:12px;">Mémoriser</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('suggestionsRappelBloc').style.display = 'block';
+}
+
+function ignorerSuggestionRappel(i) {
+  const el = document.getElementById(`srappel-${i}`);
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; setTimeout(() => el.remove(), 200); }
+  _suggestionsRappelEnCours[i] = null;
+  if (_suggestionsRappelEnCours.every(t => !t)) refuserSuggestionsRappel();
+}
+
+function memoriserSuggestionRappel(i) {
+  const inputText = document.getElementById(`srappel-text-${i}`);
+  const inputTime = document.getElementById(`srappel-time-${i}`);
+  const text = inputText ? inputText.value.trim() : _suggestionsRappelEnCours[i]?.text;
+  const time = inputTime ? (inputTime.value.trim() || null) : null;
+  if (!text) { ignorerSuggestionRappel(i); return; }
+  const todos = getTodos();
+  todos.push({ text, time, done: false, createdAt: new Date().toISOString() });
+  ajouterHistorique('rappel', text);
+  S.set('mc_todos', todos);
+  renderTodos();
+  showToast('Tâche ajoutée ✓');
+  ignorerSuggestionRappel(i);
+}
+
+function refuserSuggestionsRappel() {
+  document.getElementById('suggestionsRappelBloc').style.display = 'none';
+  _suggestionsRappelEnCours = [];
+}
+
+// ── Affichage et gestion des suggestions (depuis brief) — éditables ──
+let _suggestionsEnCours = [];
+
+function afficherSuggestions(taches) {
+  _suggestionsEnCours = taches.map(t => ({ ...t }));
+
+  const list = document.getElementById('suggestionsList');
+  list.innerHTML = _suggestionsEnCours.map((t, i) => `
+    <div id="sbrief-${i}" style="background:var(--surface);border:1px solid #C6F6D5;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <input type="text" value="${escHtml(t.text)}" id="sbrief-text-${i}"
+          style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:Inter,sans-serif;font-size:13px;color:var(--text);outline:none;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+          oninput="_suggestionsEnCours[${i}].text=this.value" />
+        <input type="text" value="${t.time || ''}" placeholder="heure" id="sbrief-time-${i}"
+          style="width:64px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-family:Inter,sans-serif;font-size:12px;color:var(--accent);font-weight:600;outline:none;text-align:center;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+          oninput="_suggestionsEnCours[${i}].time=this.value||null" />
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="ignorerSuggestionBrief(${i})" style="flex:1;padding:5px 10px;font-size:12px;">Ignorer</button>
+        <button class="btn btn-primary btn-sm" onclick="memoriserSuggestionBrief(${i})" style="flex:1;margin-top:0;padding:5px 10px;font-size:12px;">Mémoriser</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('briefSuggestions').style.display = 'block';
+}
+
+function ignorerSuggestionBrief(i) {
+  const el = document.getElementById(`sbrief-${i}`);
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; setTimeout(() => el.remove(), 200); }
+  _suggestionsEnCours[i] = null;
+  if (_suggestionsEnCours.every(t => !t)) {
+    document.getElementById('briefSuggestions').style.display = 'none';
+    _suggestionsEnCours = [];
+  }
+}
+
+function memoriserSuggestionBrief(i) {
+  const inputText = document.getElementById(`sbrief-text-${i}`);
+  const inputTime = document.getElementById(`sbrief-time-${i}`);
+  const text = inputText ? inputText.value.trim() : _suggestionsEnCours[i]?.text;
+  const time = inputTime ? (inputTime.value.trim() || null) : null;
+  if (!text) { ignorerSuggestionBrief(i); return; }
+  const todos = getTodos();
+  todos.push({ text, time, done: false, createdAt: new Date().toISOString() });
+  ajouterHistorique('rappel', text);
+  S.set('mc_todos', todos);
+  renderTodos();
+  showToast('Tâche ajoutée ✓');
+  ignorerSuggestionBrief(i);
+}
+
+function refuserSuggestions() {
+  document.getElementById('briefSuggestions').style.display = 'none';
+  _suggestionsEnCours = [];
+}
+
+// ── Historique ──
+function ajouterHistorique(type, contenu) {
+  const hist = getHistoire();
+  hist.unshift({
+    type,
+    contenu,
+    date: new Date().toLocaleString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+  });
+  if (hist.length > 30) hist.pop();
+  S.set('mc_historique', hist);
+}
+
+function renderHistorique() {
+  const list = document.getElementById('historyList');
+  const hist = getHistoire();
+  if (!hist.length) {
+    list.innerHTML = '<div class="history-empty">Aucun historique pour le moment.</div>';
+    return;
+  }
+  list.innerHTML = hist.map((item, i) => `
+    <div class="history-item">
+      <div class="history-header" onclick="toggleHistoryItem(${i})">
+        <span class="history-date">${item.date}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="history-type ${item.type}">${item.type === 'brief' ? 'Brief' : item.type === 'todo' ? 'Tâche' : 'Rappel'}</span>
+          <span class="history-chevron" id="chevron-${i}">▾</span>
+        </div>
+      </div>
+      <div class="history-body" id="hbody-${i}">
+        ${item.type === 'brief' ? item.contenu.replace(/\n/g,'<br>') : escHtml(item.contenu)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleHistoryItem(i) {
+  const body = document.getElementById(`hbody-${i}`);
+  const chev = document.getElementById(`chevron-${i}`);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+function clearHistorique() {
+  if (!confirm('Effacer tout l\'historique ?')) return;
+  S.del('mc_historique');
+  renderHistorique();
+  showToast('Historique effacé');
+}
+
+// ── Export / Import ──
+function exporterConfig() {
+  const data = {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    api_key: getCle(),
+    memoire: getMemoire(),
+    todos: getTodos(),
+    queue: getQueue(),
+    historique: getHistoire()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mentalcharge-config-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export téléchargé ✓');
+}
+
+function importerConfig(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.api_key)    S.set('mc_api_key',    data.api_key);
+      if (data.memoire)    S.set('mc_memoire',    data.memoire);
+      if (data.todos)      S.set('mc_todos',       data.todos);
+      if (data.rappels && !data.todos) S.set('mc_todos', data.rappels.map(r => ({...r, done: false})));
+      if (data.queue)      S.set('mc_queue',       data.queue);
+      if (data.historique) S.set('mc_historique',  data.historique);
+      updateStatuts();
+      renderTodos();
+      showToast('Configuration importée ✓');
+      const cle = getCle();
+      if (cle) document.getElementById('inputApiKey').value = cle;
+    } catch {
+      showToast('⚠ Fichier invalide');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function resetConfig() {
+  if (!confirm('Réinitialiser toute la configuration ? Cette action est irréversible.')) return;
+  ['mc_api_key','mc_memoire','mc_todos','mc_queue','mc_historique','mc_last_sync'].forEach(k => S.del(k));
+  document.getElementById('inputApiKey').value = '';
+  updateStatuts();
+  renderTodos();
+  showToast('Configuration réinitialisée');
+}
+
+// ── Utilitaires ──
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ────────────────────────────────────────────────
+// ── MÉMOIRE DRIVE ──
+// contexte.md  = faits persistants (profil long terme)
+// episodic.json = faits temporaires (60 jours glissants)
+// ────────────────────────────────────────────────
+
+const DRIVE_FOLDER  = 'mentalcharge';
+const DRIVE_CONTEXTE = 'contexte.md';
+const DRIVE_EPISODIC = 'episodic.json';
+
+// Cache des IDs Drive pour éviter les recherches répétées
+let _driveIds = { folderId: null, contexteId: null, episodicId: null };
+
+async function driveGetOrCreateFolder(token) {
+  if (_driveIds.folderId) return _driveIds.folderId;
+  // Chercher le dossier
+  const q = encodeURIComponent(`name='${DRIVE_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  const data = await res.json();
+  if (data.files && data.files.length > 0) {
+    _driveIds.folderId = data.files[0].id;
+    return _driveIds.folderId;
+  }
+  // Créer le dossier
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: DRIVE_FOLDER, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  const folder = await create.json();
+  _driveIds.folderId = folder.id;
+  return folder.id;
+}
+
+async function driveGetFileId(token, filename, folderId) {
+  const q = encodeURIComponent(`name='${filename}' and '${folderId}' in parents and trashed=false`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  const data = await res.json();
+  return (data.files && data.files.length > 0) ? data.files[0].id : null;
+}
+
+async function driveReadFile(token, fileId) {
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  return res.ok ? await res.text() : null;
+}
+
+async function driveWriteFile(token, fileId, folderId, filename, content, mimeType = 'text/plain') {
+  const meta = fileId ? null : JSON.stringify({ name: filename, parents: [folderId] });
+  const url = fileId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+
+  if (fileId) {
+    // Update simple
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': mimeType },
+      body: content
+    });
+    return res.ok;
+  } else {
+    // Création multipart
+    const boundary = 'mc_boundary_' + Date.now();
+    const body = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n${content}\r\n--${boundary}--`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': `multipart/related; boundary=${boundary}` },
+      body
+    });
+    const writeData = await res.json();
+    if (res.ok) {
+      return writeData.id;
+    }
+    return null;
+  }
+}
+
+// ── Lire la mémoire Drive (contexte + épisodique) ──
+async function driveChargerMemoire(token) {
+  try {
+    const folderId = await driveGetOrCreateFolder(token);
+
+    // Lire contexte.md
+    if (!_driveIds.contexteId) {
+      _driveIds.contexteId = await driveGetFileId(token, DRIVE_CONTEXTE, folderId);
+    }
+    let contexte = '';
+    if (_driveIds.contexteId) {
+      contexte = await driveReadFile(token, _driveIds.contexteId) || '';
+    }
+
+    // Lire episodic.json
+    if (!_driveIds.episodicId) {
+      _driveIds.episodicId = await driveGetFileId(token, DRIVE_EPISODIC, folderId);
+    }
+    let episodic = [];
+    if (_driveIds.episodicId) {
+      const raw = await driveReadFile(token, _driveIds.episodicId);
+      try { episodic = JSON.parse(raw || '[]'); } catch { episodic = []; }
+    }
+
+    // Nettoyer les épisodiques > 60 jours
+    const limite = Date.now() - 60 * 24 * 3600 * 1000;
+    episodic = episodic.filter(e => new Date(e.date).getTime() > limite);
+
+    // Sync vers localStorage
+    const memLocale = getMemoire();
+    const idsLocaux = new Set(memLocale.map(m => m.id));
+    episodic.forEach(e => { if (!idsLocaux.has(e.id)) memLocale.push(e); });
+    S.set('mc_memoire', memLocale);
+
+    return { contexte, episodic };
+  } catch(e) {
+    return { contexte: '', episodic: [] };
+  }
+}
+
+// ── Sauvegarder la mémoire Drive après validation ──
+async function driveSauvegarderMemoire(token, nouveauxItems) {
+  try {
+    const folderId = await driveGetOrCreateFolder(token);
+    const persistants = nouveauxItems.filter(m => m.persistant);
+    const temporaires = nouveauxItems.filter(m => !m.persistant);
+
+    // ── contexte.md (persistants) ──
+    if (persistants.length > 0) {
+      if (!_driveIds.contexteId) {
+        _driveIds.contexteId = await driveGetFileId(token, DRIVE_CONTEXTE, folderId);
+      }
+      let contenuActuel = '';
+      if (_driveIds.contexteId) {
+        contenuActuel = await driveReadFile(token, _driveIds.contexteId) || '';
+      }
+      const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const nouvelleLigne = persistants.map(m => `- ${m.contenu}`).join('\n');
+      const contenuMaj = contenuActuel
+        ? contenuActuel + `\n\n<!-- Ajouté le ${dateStr} -->\n` + nouvelleLigne
+        : `# Contexte Ben\n\n<!-- Créé le ${dateStr} -->\n` + nouvelleLigne;
+
+      if (_driveIds.contexteId) {
+        await driveWriteFile(token, _driveIds.contexteId, folderId, DRIVE_CONTEXTE, contenuMaj);
+      } else {
+        const newId = await driveWriteFile(token, null, folderId, DRIVE_CONTEXTE, contenuMaj);
+        if (newId) _driveIds.contexteId = newId;
+      }
+    }
+
+    // ── episodic.json (temporaires) ──
+    if (temporaires.length > 0) {
+      if (!_driveIds.episodicId) {
+        _driveIds.episodicId = await driveGetFileId(token, DRIVE_EPISODIC, folderId);
+      }
+      let episodic = [];
+      if (_driveIds.episodicId) {
+        const raw = await driveReadFile(token, _driveIds.episodicId);
+        try { episodic = JSON.parse(raw || '[]'); } catch { episodic = []; }
+      }
+      const limite = Date.now() - 60 * 24 * 3600 * 1000;
+      episodic = episodic.filter(e => new Date(e.date).getTime() > limite);
+      episodic.push(...temporaires);
+
+      const contenu = JSON.stringify(episodic, null, 2);
+      if (_driveIds.episodicId) {
+        await driveWriteFile(token, _driveIds.episodicId, folderId, DRIVE_EPISODIC, contenu, 'application/json');
+      } else {
+        const newId = await driveWriteFile(token, null, folderId, DRIVE_EPISODIC, contenu, 'application/json');
+        if (newId) _driveIds.episodicId = newId;
+      }
+    }
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+// ────────────────────────────────────────────────
+// ── GOOGLE OAUTH ──
+// ────────────────────────────────────────────────
+
+function connecterGoogle() {
+  if (!window.google) { showToast('⚠ Bibliothèque Google non chargée, réessaie dans 2s'); return; }
+
+  if (!_tokenClient) {
+    _tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GOOGLE_SCOPES,
+      callback: (resp) => {
+        if (resp.error) { showToast('Erreur Google : ' + resp.error); return; }
+        saveGoogleToken(resp.access_token, resp.expires_in);
+        // Récupérer l'email de l'utilisateur
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + resp.access_token }
+        })
+        .then(r => r.json())
+        .then(info => {
+          if (info.email) localStorage.setItem('mc_google_email', info.email);
+          updateStatuts();
+          showToast('Google connecté ✓');
+        })
+        .catch(() => { updateStatuts(); showToast('Google connecté ✓'); });
+      }
+    });
+  }
+  _tokenClient.requestAccessToken({ prompt: getGoogleToken() ? '' : 'consent' });
+}
+
+function deconnecterGoogle() {
+  const token = getGoogleToken();
+  if (token && window.google) google.accounts.oauth2.revoke(token, () => {});
+  _googleToken = null;
+  localStorage.removeItem('mc_google_token');
+  localStorage.removeItem('mc_google_email');
+  updateStatuts();
+  showToast('Google déconnecté');
+}
+
+// ── Fetch Gmail — 50 emails inbox des dernières 24h (lus + non lus) ──
+async function fetchGmail(token) {
+  const listRes = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=30&q=in:inbox+newer_than:2d+-category:promotions+-category:social+-category:updates+-category:forums+-from:noreply+-from:no-reply+-from:donotreply`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  );
+  if (!listRes.ok) throw new Error('Gmail ' + listRes.status);
+  const listData = await listRes.json();
+  if (listData.error) throw new Error('Gmail: ' + listData.error.message);
+  if (!listData.messages || !listData.messages.length) return '';
+
+  const details = await Promise.all(
+    listData.messages.map(m =>
+      fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From`,
+        { headers: { Authorization: 'Bearer ' + token } }
+      ).then(r => r.json())
+    )
+  );
+
+  return details.map(msg => {
+    const headers   = msg.payload?.headers || [];
+    const subject   = headers.find(h => h.name === 'Subject')?.value || '(sans objet)';
+    const from      = headers.find(h => h.name === 'From')?.value || '';
+    const fromClean = from.replace(/<[^>]+>/, '').trim() || from;
+    const snippet   = (msg.snippet || '').slice(0, 120);
+    const unread    = msg.labelIds?.includes('UNREAD') ? '[non lu] ' : '';
+    return `${unread}De : ${fromClean} | ${subject} | ${snippet}`;
+  }).join('\n');
+}
+
+// ── Retourne l'offset timezone local au format +HH:MM ou -HH:MM ──
+function getTimezoneOffset() {
+  const offset = -new Date().getTimezoneOffset(); // en minutes, inversé
+  const sign = offset >= 0 ? '+' : '-';
+  const h = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+  const m = String(Math.abs(offset) % 60).padStart(2, '0');
+  return `${sign}${h}:${m}`;
+}
+
+// ── Fetch Google Calendar — J+30 ──
+async function fetchCalendar(token, joursMax = 30) {
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('fr-CA');
+  const finDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + joursMax + 1);
+  const finStr  = finDate.toLocaleDateString('fr-CA');
+
+  const debut = todayStr + 'T00:00:00' + getTimezoneOffset();
+  const fin   = finStr   + 'T00:00:00' + getTimezoneOffset();
+
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(debut)}&timeMax=${encodeURIComponent(fin)}&singleEvents=true&orderBy=startTime&maxResults=150&timeZone=Europe%2FParis`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  );
+  if (!res.ok) throw new Error('Calendar ' + res.status);
+  const data = await res.json();
+  if (data.error) throw new Error('Calendar: ' + data.error.message);
+  if (!data.items || !data.items.length) return { prompt: '', jours: new Map() };
+
+  const parJour = new Map();
+  data.items.forEach(evt => {
+    const label = evt.summary || '(sans titre)';
+    let heure, evtDateStr;
+    if (evt.start?.dateTime) {
+      const d = new Date(evt.start.dateTime);
+      heure = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      evtDateStr = d.toLocaleDateString('fr-CA');
+    } else if (evt.start?.date) {
+      heure = 'Toute la journée';
+      evtDateStr = evt.start.date;
+    } else return;
+    const lieu = evt.location ? ` @ ${evt.location}` : '';
+    const ligne = `${heure} — ${label}${lieu}`;
+    if (!parJour.has(evtDateStr)) parJour.set(evtDateStr, []);
+    parJour.get(evtDateStr).push(ligne);
+  });
+
+  const joursTriés = [...parJour.keys()].sort();
+  const lignesPrompt = [];
+  joursTriés.forEach(dateStr => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const diffJ = Math.round((d - new Date(todayStr + 'T12:00:00')) / 86400000);
+    let label;
+    if (diffJ === 0)      label = "Aujourd'hui";
+    else if (diffJ === 1) label = 'Demain';
+    else                  label = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    lignesPrompt.push(`${label} :\n` + parJour.get(dateStr).map(e => `- ${e}`).join('\n'));
+  });
+
+  return { prompt: lignesPrompt.join('\n\n'), jours: parJour };
+}
+
+async function rafraichirAgenda() {
+  const token = getGoogleToken();
+  const el = document.getElementById('agendaContent');
+  if (!token) {
+    el.textContent = 'Connecte Google Calendar pour voir tes événements.';
+    return;
+  }
+  el.innerHTML = '<span style="color:var(--text-dim);font-size:13px;">Chargement...</span>';
+
+  try {
+    const { jours } = await fetchCalendar(token, 7);
+    if (!jours.size) { el.textContent = 'Aucun événement dans les 7 prochains jours.'; return; }
+
+    const todayStr = new Date().toLocaleDateString('fr-CA');
+    const joursTriés = [...jours.keys()].sort();
+
+    el.innerHTML = joursTriés.map(dateStr => {
+      const d = new Date(dateStr + 'T12:00:00');
+      const diffJ = Math.round((d - new Date(todayStr + 'T12:00:00')) / 86400000);
+      let labelJour, couleur;
+      if (diffJ === 0)      { labelJour = "Aujourd'hui"; couleur = 'var(--accent)'; }
+      else if (diffJ === 1) { labelJour = 'Demain'; couleur = 'var(--ok)'; }
+      else                  { labelJour = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }); couleur = 'var(--text-muted)'; }
+
+      const evts = jours.get(dateStr).map(e => {
+        const parts = e.split(' — ');
+        const heure = parts[0];
+        const reste = parts.slice(1).join(' — ');
+        return `<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:baseline;">
+          <span style="color:var(--accent);font-weight:600;min-width:80px;flex-shrink:0;">${heure}</span>
+          <span style="color:var(--text);flex:1;">${reste}</span>
+        </div>`;
+      }).join('');
+
+      return `<div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:${couleur};margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid ${couleur};">${labelJour}</div>
+        ${evts}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--danger);font-size:13px;">⚠ Erreur Calendar — reconnecte Google (${e.message})</span>`;
+  }
+}
+
+
+// ── Init ──
+configurerBriefUI();
+renderTodos();
+updateQueueUI();
+verifierSyncAuto();
+chargerMeteo();
+setInterval(verifierSyncAuto, 30 * 60 * 1000);
+setInterval(chargerMeteo, 60 * 60 * 1000);
+setTimeout(() => {
+  if (window.google && getGoogleToken()) refreshGoogleTokenSiNecessaire();
+}, 5000);
+setInterval(() => {
+  if (window.google && localStorage.getItem('mc_google_token')) refreshGoogleTokenSiNecessaire();
+}, 4 * 60 * 1000);
+
+// ────────────────────────────────────────────────
+// ── CHAT INTERACTIF ──
+// ────────────────────────────────────────────────
+
+let _chatHistory = [];
+let _chatSystemPrompt = null;
+let _chatContextLoaded = false;
+let _chatThinking = false;
+let _memChatPending = [];
+
+async function initChat() {
+  if (_chatContextLoaded) return;
+  const cle = getCle();
+  if (!cle) return;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const heureStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+
+  let contexteDrive = getContexteDepuisMemoire();
+  let episodicTexte = '';
+  let calendarTexte = '';
+  let meteoTexte = '';
+
+  const token = getGoogleToken();
+  if (token) {
+    try {
+      const { contexte: ctxDrive, episodic } = await driveChargerMemoire(token);
+      if (ctxDrive) contexteDrive = ctxDrive;
+      if (episodic.length) episodicTexte = episodic.map(e => `- ${e.contenu}`).join('\n');
+      const calResult = await fetchCalendar(token, 7);
+      calendarTexte = calResult.prompt || '';
+    } catch(e) {}
+  }
+
+  if (_meteoData) {
+    meteoTexte = `Météo : ${_meteoData.icon} ${_meteoData.temp}°C, ${_meteoData.desc}, min ${_meteoData.tempMin}°C / max ${_meteoData.tempMax}°C.`;
+  }
+
+  const todos = getTodos().filter(t => !t.done);
+  const todosTexte = todos.length ? todos.map(t => (t.time ? t.time + ' — ' : '') + t.text).join(', ') : 'Aucune tâche en cours.';
+
+  _chatSystemPrompt = `Tu es l'assistant personnel de Ben, anesthésiste-réanimateur en chirurgie cardiaque à Paris.
+Nous sommes le ${dateStr} à ${heureStr}.
+${meteoTexte}
+${contexteDrive ? '\nCe que tu sais sur Ben :\n' + contexteDrive : ''}
+${episodicTexte ? '\nMémoire récente :\n' + episodicTexte : ''}
+${calendarTexte ? '\nAgenda du jour et demain :\n' + calendarTexte : ''}
+\nTâches en cours : ${todosTexte}
+
+Tu réponds de façon conversationnelle, concise et naturelle. Tu peux utiliser du markdown simple (**gras**, listes -).
+Si tu détectes une nouvelle information durable sur Ben (personne, préférence, contrainte, fait important), ajoute à la FIN de ta réponse un bloc <MEMOIRE>[{"contenu":"...","persistant":true/false}]</MEMOIRE>. Sinon, n'inclus pas ce bloc.`;
+
+  _chatContextLoaded = true;
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function autoResizeChatInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function sendChatSuggestion(btn) {
+  document.getElementById('chatInput').value = btn.textContent.trim();
+  sendChat();
+}
+
+function appendChatMsg(role, html, id) {
+  document.getElementById('chatEmpty')?.remove();
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  if (id) div.id = id;
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const texte = input.value.trim();
+  if (!texte || _chatThinking) return;
+
+  const cle = getCle();
+  if (!cle) { showToast('⚠ Configure ta clé API d\'abord'); switchTab('params'); return; }
+
+  appendChatMsg('user', escHtml(texte).replace(/\n/g, '<br>'));
+  input.value = '';
+  input.style.height = 'auto';
+  _chatHistory.push({ role: 'user', content: texte });
+
+  if (!_chatContextLoaded) await initChat();
+
+  const thinkingId = 'chat-thinking-' + Date.now();
+  appendChatMsg('thinking', 'Claude réfléchit', thinkingId);
+  _chatThinking = true;
+  document.getElementById('chatSendBtn').disabled = true;
+
+  try {
+    const res = await fetch('https://mentalcharge-proxy.benjamin-frossard.workers.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cle,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-allowance': 'my-public-webui'
+      },
+      body: JSON.stringify({
+        model: getModelChat(),
+        max_tokens: 1000,
+        system: _chatSystemPrompt || '',
+        messages: _chatHistory
+      })
+    });
+
+    const data = await res.json();
+    if (!data.content?.[0]?.text) throw new Error(data.error?.message || 'Réponse inattendue');
+
+    const raw = data.content[0].text;
+    const memoireMatch = raw.match(/<MEMOIRE>([\s\S]*?)<\/MEMOIRE>/);
+    const reponseTexte = raw.replace(/<MEMOIRE>[\s\S]*?<\/MEMOIRE>/, '').trim();
+
+    _chatHistory.push({ role: 'assistant', content: reponseTexte });
+    document.getElementById(thinkingId)?.remove();
+    appendChatMsg('assistant', renderMarkdown(reponseTexte));
+
+    if (memoireMatch) {
+      try {
+        const items = JSON.parse(memoireMatch[1].trim());
+        if (items.length > 0) {
+          _memChatPending = items.map(m => ({ ...m, ignored: false, source: 'chat' }));
+          renderMemChatPending();
+        }
+      } catch {}
+    }
+
+  } catch(err) {
+    document.getElementById(thinkingId)?.remove();
+    appendChatMsg('assistant', `<em style="color:var(--danger);">Erreur : ${escHtml(err.message)}</em>`);
+    _chatHistory.pop();
+  } finally {
+    _chatThinking = false;
+    document.getElementById('chatSendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+}
+
+function renderMemChatPending() {
+  document.getElementById('chat-mem-pending')?.remove();
+  const msgs = document.getElementById('chatMessages');
+  const wrap = document.createElement('div');
+  wrap.id = 'chat-mem-pending';
+  wrap.innerHTML = `
+    <div style="background:var(--warn-light);border:1px solid #FDE68A;border-radius:12px;padding:10px 14px;font-size:13px;margin-top:4px;">
+      <div style="font-size:11px;font-weight:600;color:var(--warn);margin-bottom:8px;">🧠 Info à mémoriser</div>
+      ${_memChatPending.map((item, i) => `
+        <div id="chatmem-${i}" style="background:var(--surface);border:1px solid #FDE68A;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
+          <div style="font-size:13px;color:var(--text);margin-bottom:6px;">${escHtml(item.contenu)}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="toggle-persistant ${item.persistant ? 'on' : ''}" id="chatmem-toggle-${i}"
+              onclick="toggleChatMem(${i})">${item.persistant ? '📌 Persistant' : '⏱ Temporaire'}</button>
+            <div style="flex:1;"></div>
+            <button class="btn btn-ghost btn-sm" onclick="ignorerChatMem(${i})" style="padding:4px 10px;font-size:12px;">Ignorer</button>
+            <button class="btn btn-primary btn-sm" onclick="memoriserChatMem(${i})" style="margin-top:0;padding:4px 10px;font-size:12px;">Mémoriser</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function toggleChatMem(i) {
+  _memChatPending[i].persistant = !_memChatPending[i].persistant;
+  const btn = document.getElementById(`chatmem-toggle-${i}`);
+  if (btn) {
+    btn.className = `toggle-persistant ${_memChatPending[i].persistant ? 'on' : ''}`;
+    btn.textContent = _memChatPending[i].persistant ? '📌 Persistant' : '⏱ Temporaire';
+  }
+}
+
+function ignorerChatMem(i) {
+  const el = document.getElementById(`chatmem-${i}`);
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; setTimeout(() => el.remove(), 200); }
+  _memChatPending[i].ignored = true;
+  if (_memChatPending.every(m => m.ignored)) document.getElementById('chat-mem-pending')?.remove();
+}
+
+function memoriserChatMem(i) {
+  const item = _memChatPending[i];
+  if (!item || !item.contenu) { ignorerChatMem(i); return; }
+  const mem = getMemoire();
+  mem.push({ id: Date.now() + Math.random(), contenu: item.contenu, persistant: item.persistant, date: new Date().toISOString(), source: 'chat' });
+  const limite = Date.now() - 60 * 24 * 3600 * 1000;
+  S.set('mc_memoire', mem.filter(m => m.persistant || new Date(m.date).getTime() > limite));
+  showToast('Mémorisé ✓');
+  const token = getGoogleToken();
+  if (token) driveSauvegarderMemoire(token, [item]).catch(() => {});
+  ignorerChatMem(i);
+}
+
+function clearChat() {
+  _chatHistory = [];
+  _chatContextLoaded = false;
+  _chatSystemPrompt = null;
+  _memChatPending = [];
+  document.getElementById('chatMessages').innerHTML = `
+    <div class="chat-empty" id="chatEmpty">
+      <div class="chat-empty-icon">💬</div>
+      <div>Pose-moi une question, je connais ton agenda, tes tâches et ta mémoire.</div>
+      <div class="chat-suggestions">
+        <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Qu'est-ce que j'ai aujourd'hui ?</button>
+        <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Rappelle-moi mes tâches en cours</button>
+        <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Aide-moi à rédiger un message</button>
+        <button class="chat-suggestion-pill" onclick="sendChatSuggestion(this)">Qu'est-ce que j'ai prévu demain ?</button>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>
